@@ -1,10 +1,10 @@
+export interface GameSize {
+  width: number;
+  height: number;
+}
+
 export default class GameData {
-  private constructor() {}
-  private static _singleton: GameData | null = null;
-  public static get Instance(): GameData {
-    if (!this._singleton) {
-      this._singleton = new GameData();
-    }
-    return this._singleton;
-  }
+  public static GAME_SIZE_DEFAULT: GameSize = { width: 10, height: 10 };
+
+  public static CHECK_REMOVE_MIN = 3;
 }
