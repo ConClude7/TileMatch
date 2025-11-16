@@ -1,5 +1,6 @@
 import { EventTarget } from "cc";
 import ConsoleUtils from "./consoleUtils";
+import Tile from "../models/tile";
 
 type EventData<T = any> = {
   success: boolean;
@@ -11,6 +12,9 @@ enum EventKey {
   ROUTER = "ROUTER",
   CHANGE_NETWORK = "CHANGE_NETWORK",
   CALL_ELEVATOR = "CALL_ELEVATOR",
+  MAP_CREATE = "MAP_CREATE",
+  TILE_TOUCH_MOVE = "TILE_TOUCH_MOVE",
+  TILE_MATCH = "TILE_MATCH",
 }
 class EventUtils {
   private static eventTarget = new EventTarget();
@@ -41,3 +45,12 @@ class EventUtils {
 
 export default EventUtils;
 export { type EventData, EventKey };
+
+export interface EventDataTileMatchSuccess {
+  tiles: Array<Tile>;
+}
+
+export interface EventDataTileMatchError {
+  tileStart: Tile;
+  tileEnd: Tile;
+}

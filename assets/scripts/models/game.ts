@@ -1,5 +1,10 @@
-import { GameSize } from "../management/gameData";
+import GameData, { GameSize } from "../management/gameData";
 import ConsoleUtils from "../utils/consoleUtils";
+import EventUtils, {
+  EventDataTileMatchError,
+  EventDataTileMatchSuccess,
+  EventKey,
+} from "../utils/eventUtils";
 import Tile, { TileOptions, TilePos, TileValue } from "./tile";
 
 export interface GameOptions {
@@ -7,6 +12,8 @@ export interface GameOptions {
   max_golden: number; // 最大金币数量
   level: number; // 难度: MIN: 1
 }
+
+export type GameMap = Array<Array<Tile>>;
 
 const TAG = "TileMatch";
 export default class TileMatch {
@@ -16,7 +23,21 @@ export default class TileMatch {
     this.options = options;
   }
 
-  public map: Array<Array<Tile>> = [];
+  public map: GameMap = [];
+
+  public get tiles(): Array<Tile> {
+    const { width, height } = this.options.size;
+    const tiles: Tile[] = [];
+    const map = this.map;
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        tiles.push(map[x][y]);
+      }
+    }
+
+    return tiles;
+  }
+
   private createMap() {
     const { size, max_golden, level } = this.options;
     this.map = [];
@@ -28,7 +49,6 @@ export default class TileMatch {
         // 根据难度控制普通方块的类型数量
         const maxNormalType = this.getMaxNormalTypeByLevel(level);
         const randomType = Math.floor(Math.random() * maxNormalType);
-
         const tileOptions: TileOptions = {
           pos: { x, y },
           value: randomType,
@@ -47,6 +67,7 @@ export default class TileMatch {
       TAG,
       `地图创建完成: ${size.width}x${size.height}, 金币: ${max_golden}, 难度: ${level}`
     );
+    EventUtils.emit(EventKey.MAP_CREATE, { data: {}, success: true });
   }
 
   /**
@@ -54,10 +75,18 @@ export default class TileMatch {
    * 难度越高，方块种类越多，游戏越难
    */
   private getMaxNormalTypeByLevel(level: number): number {
-    // 基础3种类型，每增加2级难度增加1种类型，最多不超过6种
-    const baseTypes = 3;
-    const additionalTypes = Math.min(Math.floor(level / 2), 3); // 最多增加3种
-    return baseTypes + additionalTypes;
+    const difficultySettings = [
+      {
+        minLevel: 1,
+        maxLevel: Infinity,
+        typeCount: GameData.LEVEL_MAX_TILE_TYPE,
+      },
+    ];
+
+    const setting = difficultySettings.find(
+      (s) => level >= s.minLevel && level <= s.maxLevel
+    );
+    return setting ? setting.typeCount : GameData.LEVEL_MIN_TILE_TYPE; // 默认4种
   }
 
   /**
@@ -85,10 +114,10 @@ export default class TileMatch {
 
       // 检查这个位置是否已经是金币，且周围没有太多金币（避免金币扎堆）
       if (
-        this.map[x][y].value !== TileValue.GOLDEN &&
+        this.map[x][y].value !== TileValue.BTC &&
         this.canPlaceGoldenAt(x, y)
       ) {
-        this.map[x][y].value = TileValue.GOLDEN;
+        this.map[x][y].value = TileValue.BTC;
         placedCount++;
       }
     }
@@ -120,7 +149,7 @@ export default class TileMatch {
 
       if (
         this.isValidPosition(newX, newY) &&
-        this.map[newX][newY].value === TileValue.GOLDEN
+        this.map[newX][newY].value === TileValue.BTC
       ) {
         adjacentGoldenCount++;
 
@@ -137,7 +166,7 @@ export default class TileMatch {
   /**
    * 检查坐标是否在地图范围内
    */
-  private isValidPosition(x: number, y: number): boolean {
+  public isValidPosition(x: number, y: number): boolean {
     const { width, height } = this.options.size;
     return x >= 0 && x < width && y >= 0 && y < height;
   }
@@ -188,7 +217,7 @@ export default class TileMatch {
   private hasMatchAt(x: number, y: number): boolean {
     const { width, height } = this.options.size;
     const tile = this.map[x][y];
-    if (tile.value === TileValue.GOLDEN) return false; // 金币不参与匹配
+    if (tile.value === TileValue.BTC) return false; // 金币不参与匹配
 
     const tileType = tile.value;
 
@@ -258,7 +287,7 @@ export default class TileMatch {
     // 收集所有普通方块和金币位置
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        if (this.map[x][y].value === TileValue.GOLDEN) {
+        if (this.map[x][y].value === TileValue.BTC) {
           goldenPositions.push({ x, y });
         } else {
           normalTiles.push(this.map[x][y]);
@@ -297,7 +326,9 @@ export default class TileMatch {
     }
   }
 
-  public start() {}
+  public start() {
+    this.createMap();
+  }
   /**
    * 交换两个方块
    */
@@ -309,7 +340,7 @@ export default class TileMatch {
     }
 
     // 检查是否都是金币（金币不能交换）
-    if (start.value === TileValue.GOLDEN && end.value === TileValue.GOLDEN) {
+    if (start.value === TileValue.BTC && end.value === TileValue.BTC) {
       console.log("金币不能互相交换");
       return false;
     }
@@ -364,7 +395,7 @@ export default class TileMatch {
    */
   private getMatchesAt(x: number, y: number): Tile[] {
     const tile = this.map[x][y];
-    if (tile.value === TileValue.GOLDEN) return []; // 金币不参与匹配
+    if (tile.value === TileValue.BTC) return []; // 金币不参与匹配
 
     const matchedTiles: Tile[] = [];
     const tileType = tile.value;
@@ -436,7 +467,7 @@ export default class TileMatch {
 
     // 消除方块
     for (const tile of tiles) {
-      if (tile.value === TileValue.GOLDEN) {
+      if (tile.value === TileValue.BTC) {
         goldenCount++;
       } else {
         normalCount++;
@@ -542,7 +573,7 @@ export default class TileMatch {
     const normalTiles: Tile[] = [];
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        if (this.map[x][y].value !== TileValue.GOLDEN) {
+        if (this.map[x][y].value !== TileValue.BTC) {
           normalTiles.push(this.map[x][y]);
         }
       }
@@ -555,7 +586,7 @@ export default class TileMatch {
     let index = 0;
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        if (this.map[x][y].value !== TileValue.GOLDEN) {
+        if (this.map[x][y].value !== TileValue.BTC) {
           this.map[x][y].value = normalTiles[index].value;
           index++;
         }
@@ -625,10 +656,14 @@ export default class TileMatch {
   ): void {
     // 在这里处理消除成功的事件
     // 比如：更新分数、播放音效、触发特效等
+    const data: EventDataTileMatchSuccess = { tiles };
+    EventUtils.emit(EventKey.TILE_MATCH, { data, success: true });
   }
 
   private onMatchFailed(start: Tile, end: Tile): void {
     // 在这里处理匹配失败的事件
     // 比如：播放失败音效、显示提示等
+    const data: EventDataTileMatchError = { tileStart: start, tileEnd: end };
+    EventUtils.emit(EventKey.TILE_MATCH, { data, success: false });
   }
 }

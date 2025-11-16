@@ -1,7 +1,7 @@
-export function getEnumkey<T extends Record<string, string>>(
+export function getEnumKey<T extends Record<string, number | string>>(
   enumObj: T,
-  value: string
-): T[keyof T] | null {
+  value: number | string
+): string | null {
   const key = Object.keys(enumObj).find((k) => enumObj[k] === value);
-  return key ? (enumObj[key] as T[keyof T]) : null;
+  return key || null;
 }
