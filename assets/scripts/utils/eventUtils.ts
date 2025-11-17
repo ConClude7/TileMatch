@@ -47,6 +47,8 @@ export default EventUtils;
 export { type EventData, EventKey };
 
 export interface EventDataTileMatchSuccess {
+  tileStart: Tile;
+  tileEnd: Tile;
   tiles: Array<Tile>;
 }
 

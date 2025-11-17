@@ -14,8 +14,16 @@ import ConsoleUtils from "../utils/consoleUtils";
 import { Layout } from "cc";
 
 const TAG = "GameManagement";
+
+export enum GameStatus {
+  STOP = "STOP",
+  PLAY = "PLAY",
+  MATCH = "MATCH",
+}
+
 export default class GameManagement {
   public game: TileMatch;
+  public status: GameStatus;
   private _node: page_game;
 
   // public get node(): Node {
@@ -39,27 +47,33 @@ export default class GameManagement {
       max_golden: 10,
       level: 1,
     });
+    this.status = GameStatus.STOP;
   }
 
   public init() {
     EventUtils.on(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.on(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
+    EventUtils.on(EventKey.TILE_MATCH, this.event_tile_match, this);
     this.startGame();
   }
 
   private startGame() {
     this.game.start();
+    this.status = GameStatus.PLAY;
   }
 
   public destory() {
     EventUtils.off(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.off(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
+    EventUtils.off(EventKey.TILE_MATCH, this.event_tile_match, this);
   }
 
   private drawMap = ({ isUpdate = false }) => {
     const tiles = this.game.tiles;
     tiles.forEach((tile) => {
-      this.NodeGrid.addChild(tile.nodeTile.node);
+      if (!isUpdate) {
+        this.NodeGrid.addChild(tile.nodeTile.node);
+      }
       tile.drawImage();
     });
   };
@@ -102,21 +116,80 @@ export default class GameManagement {
     const isMatch = this.game.changeTile(tile, targetTile);
   };
 
-  event_tile_match = (e: EventData) => {
-    if (e.success) {
-      this.matchSuccess(e.data);
-    } else {
-      this.matchError(e.data);
+  event_tile_match = async (e: EventData) => {
+    if (this.status === GameStatus.MATCH) return;
+    try {
+      this.status = GameStatus.MATCH;
+      if (e.success) {
+        await this.matchSuccess(e.data);
+      } else {
+        await this.matchError(e.data);
+      }
+    } catch (error) {
+      ConsoleUtils.error(TAG, error);
+    } finally {
+      this.status = GameStatus.PLAY;
     }
   };
 
-  private matchSuccess = (data: EventDataTileMatchSuccess) => {
-    data.tiles.forEach((tile) => {
-      tile.destory();
-    });
+  private matchSuccess = async (data: EventDataTileMatchSuccess) => {
+    const { tileStart, tileEnd, tiles } = data;
+    await Promise.all([
+      tileStart.animation_move({
+        tileStart,
+        tileEnd,
+        targetPos: { ...tileEnd.pos },
+        grid: this.LayoutGrid,
+        success: true,
+      }),
+      tileEnd.animation_move({
+        tileStart,
+        tileEnd,
+        targetPos: { ...tileStart.pos },
+        grid: this.LayoutGrid,
+        success: true,
+      }),
+    ]);
+
+    await Promise.all(tiles.map((tile) => tile.animation_destory));
+    if (this.game.callback_matchSuccess) {
+      this.game.callback_matchSuccess();
+    }
   };
 
-  private matchError = (data: EventDataTileMatchError) => {};
+  private matchError = async ({
+    tileStart,
+    tileEnd,
+  }: EventDataTileMatchError) => {
+    await Promise.all([
+      tileStart.animation_move({
+        tileStart,
+        tileEnd,
+        targetPos: { ...tileEnd.pos },
+        grid: this.LayoutGrid,
+        success: false,
+      }),
+      tileEnd.animation_move({
+        tileStart,
+        tileEnd,
+        targetPos: { ...tileStart.pos },
+        grid: this.LayoutGrid,
+        success: false,
+      }),
+    ]);
+    // await Promise.all([
+    //   tileStart.animation_move({
+    //     targetPos: { ...tileStart.pos },
+    //     grid: this.LayoutGrid,
+    //     success: false,
+    //   }),
+    //   tileEnd.animation_move({
+    //     targetPos: { ...tileEnd.pos },
+    //     grid: this.LayoutGrid,
+    //     success: false,
+    //   }),
+    // ]);
+  };
 
   private moveTile = () => {};
 }

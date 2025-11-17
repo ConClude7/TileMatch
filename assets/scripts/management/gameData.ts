@@ -13,4 +13,10 @@ export default class GameData {
   public static LEVEL_MAX_TILE_TYPE = 7;
 
   public static TILE_MOVE_DISTANCE = 20;
+
+  public static TWEEN_TILE_MOVE_S = 0.2;
+
+  public static TWEEN_TILE_CREATE_S = 0.4;
+
+  public static TWEEN_TILE_DESTORY_S = 0.15;
 }

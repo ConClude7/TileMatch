@@ -61,13 +61,13 @@ export default class TileMatch {
     this.placeGoldenTiles(max_golden);
 
     // 3. 确保初始地图没有可直接消除的组合
-    this.ensureNoInitialMatches();
-
-    ConsoleUtils.log(
-      TAG,
-      `地图创建完成: ${size.width}x${size.height}, 金币: ${max_golden}, 难度: ${level}`
-    );
-    EventUtils.emit(EventKey.MAP_CREATE, { data: {}, success: true });
+    this.ensureNoInitialMatches().then(() => {
+      ConsoleUtils.log(
+        TAG,
+        `地图创建完成: ${size.width}x${size.height}, 金币: ${max_golden}, 难度: ${level}`
+      );
+      EventUtils.emit(EventKey.MAP_CREATE, { data: {}, success: true });
+    });
   }
 
   /**
@@ -174,24 +174,28 @@ export default class TileMatch {
   /**
    * 确保初始地图没有可直接消除的组合
    */
-  private ensureNoInitialMatches(): void {
-    let hasMatches = true;
-    let reshuffleCount = 0;
-    const maxReshuffles = 10; // 最大重排次数，防止无限循环
+  private ensureNoInitialMatches(): Promise<void> {
+    return new Promise((resolve) => {
+      let hasMatches = true;
+      let reshuffleCount = 0;
+      // 最大重排次数，防止无限循环
+      const maxReshuffles = 100;
 
-    while (hasMatches && reshuffleCount < maxReshuffles) {
-      hasMatches = this.checkInitialMatches();
+      while (hasMatches && reshuffleCount < maxReshuffles) {
+        hasMatches = this.checkInitialMatches();
 
-      if (hasMatches) {
-        // 如果有匹配，重新排列普通方块（保持金币位置不变）
-        this.reshuffleNormalTiles();
-        reshuffleCount++;
+        if (hasMatches) {
+          // 如果有匹配，重新排列普通方块（保持金币位置不变）
+          this.reshuffleNormalTiles();
+          reshuffleCount++;
+        }
       }
-    }
 
-    if (reshuffleCount > 0) {
-      ConsoleUtils.log(TAG, `重排了 ${reshuffleCount} 次以消除初始匹配`);
-    }
+      if (reshuffleCount > 0) {
+        ConsoleUtils.log(TAG, `重排了 ${reshuffleCount} 次以消除初始匹配`);
+      }
+      resolve();
+    });
   }
 
   /**
@@ -357,7 +361,7 @@ export default class TileMatch {
       const allMatches = [...startMatch, ...endMatch];
       // 去重
       const uniqueMatches = Array.from(new Set(allMatches));
-      this.matchSuccess(uniqueMatches);
+      this.matchSuccess(start, end, uniqueMatches);
       return true;
     } else {
       // 交换失败，没有匹配，交换回来
@@ -382,6 +386,8 @@ export default class TileMatch {
     const tempValue = tile1.value;
     tile1.value = tile2.value;
     tile2.value = tempValue;
+    tile1.drawImage();
+    tile2.drawImage();
   }
 
   /**
@@ -458,7 +464,12 @@ export default class TileMatch {
   /**
    * 匹配成功处理
    */
-  private matchSuccess(tiles: Array<Tile>): void {
+  public callback_matchSuccess: (() => void) | null = null;
+  private matchSuccess(
+    tileStart: Tile,
+    tileEnd: Tile,
+    tiles: Array<Tile>
+  ): void {
     console.log(`匹配成功！消除了 ${tiles.length} 个方块`);
 
     // 统计金币数量
@@ -477,22 +488,30 @@ export default class TileMatch {
     }
 
     // 触发消除效果、播放动画、加分等
-    this.onTilesMatched(tiles, goldenCount, normalCount);
+    this.onTilesMatched(tileStart, tileEnd, tiles, goldenCount, normalCount);
 
-    // 方块下落
-    this.applyGravity();
+    this.callback_matchSuccess = () => {
+      // 方块下落
+      this.applyGravity();
 
-    // 填充新的方块
-    this.fillEmptyTiles();
+      // 填充新的方块
+      this.fillEmptyTiles();
 
-    // 检查是否还有可消除的组合
-    if (!this.checkMapHasResult()) {
-      console.log("没有可消除的组合了，重新整理地图");
-      this.refershMap();
-    }
+      // 检查是否还有可消除的组合
+      if (!this.checkMapHasResult()) {
+        console.log("没有可消除的组合了，重新整理地图");
+        this.refershMap();
+      }
 
-    // 检查游戏是否结束
-    this.checkGameEnd();
+      // 检查游戏是否结束
+      this.checkGameEnd();
+    };
+  }
+
+  private drawMap() {
+    this.tiles.forEach((tile) => {
+      tile.drawImage();
+    });
   }
 
   /**
@@ -635,6 +654,7 @@ export default class TileMatch {
         if (this.map[x][y].value === -1) {
           const randomType = Math.floor(Math.random() * maxNormalType);
           this.map[x][y].value = randomType;
+          this.map[x][y].drawImage();
         }
       }
     }
@@ -650,13 +670,15 @@ export default class TileMatch {
 
   // 事件回调方法（需要你在外部实现）
   private onTilesMatched(
+    tileStart: Tile,
+    tileEnd: Tile,
     tiles: Tile[],
     goldenCount: number,
     normalCount: number
   ): void {
     // 在这里处理消除成功的事件
     // 比如：更新分数、播放音效、触发特效等
-    const data: EventDataTileMatchSuccess = { tiles };
+    const data: EventDataTileMatchSuccess = { tileStart, tileEnd, tiles };
     EventUtils.emit(EventKey.TILE_MATCH, { data, success: true });
   }
 
