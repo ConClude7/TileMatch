@@ -35,22 +35,28 @@ export enum TileValue {
 export interface TileOptions {
   pos: TilePos;
   value: TileValue;
+  tileSize: number;
+  tileSpacing: number;
 }
 
 const TAG = "TILE";
 export default class Tile {
   public pos: TilePos;
+  private _size: number;
+  private _spacing: number;
   private _value: TileValue;
+  public isMatched = false;
   public get value(): TileValue {
     return this._value;
   }
   public set value(v: TileValue) {
     const lastValue = this._value;
     this._value = v;
-    this.drawImage();
-    if (lastValue === TileValue.EMPTY) {
-      this.animation_create();
+    // this.drawImage();
+    if (this.isMatched) {
+      return;
     }
+    // this.animation_create();
   }
 
   public nodeTile: NodeTile;
@@ -58,7 +64,12 @@ export default class Tile {
   private _touch: TouchUtils;
 
   public constructor(options: TileOptions) {
-    ({ pos: this.pos, value: this._value } = options);
+    ({
+      pos: this.pos,
+      value: this._value,
+      tileSize: this._size,
+      tileSpacing: this._spacing,
+    } = options);
     const node = instantiate(PrefabUtils.PrefabTile);
     const tileScript = node.getScript<NodeTile>("NodeTile");
     if (!tileScript) throw "TileScript is NULL!";
@@ -82,7 +93,10 @@ export default class Tile {
   };
 
   public drawImage = () => {
-    this.nodeTile.NodeImg.position = Vec3.ZERO;
+    const nodeImg = this.nodeTile.NodeImg;
+    nodeImg.position = Vec3.ZERO;
+    nodeImg.changeScale(Vec2.ONE);
+    nodeImg.changeColor(color(255, 255, 255, 255));
     if (this.value === TileValue.EMPTY) {
       // ConsoleUtils.error(TAG, {
       //   data: this,
@@ -91,7 +105,7 @@ export default class Tile {
       return;
     }
     const keyName = getEnumKey(TileValue, this.value);
-    this.nodeTile.NodeImg.changeSpriteFrame(`Tiles/${keyName}`);
+    nodeImg.changeSpriteFrame(`Tiles/${keyName}`);
   };
 
   private _event_called = false;
@@ -124,24 +138,28 @@ export default class Tile {
   public animation_move = async (
     options: AnimationMoveOptions
   ): Promise<void> => {
-    const { tileStart, tileEnd, targetPos, grid, success } = options;
-    const { cellSize, spacingX, spacingY } = grid;
+    return new Promise(async (resolve) => {
+      const { tileStart, tileEnd, targetPos, grid, success } = options;
+      const { cellSize, spacingX, spacingY } = grid;
 
-    const start = this.nodeTile.NodeImg.position.clone();
-    const end = start.clone();
-    const selfPos = this.pos;
-    end.x += (targetPos.x - selfPos.x) * (cellSize.width + spacingX);
-    end.y += (selfPos.y - targetPos.y) * (cellSize.height + spacingY);
-    console.log({ start, end });
-    await this._tween_move(end);
-    if (success) {
-      const templateValue = tileEnd.value;
-      tileEnd.value = tileStart.value;
-      tileStart.value = templateValue;
-    } else {
-      await this._tween_move(start);
-    }
-    return;
+      const start = this.nodeTile.NodeImg.position.clone();
+      const end = start.clone();
+      const selfPos = this.pos;
+      end.x += (targetPos.x - selfPos.x) * (cellSize.width + spacingX);
+      end.y += (selfPos.y - targetPos.y) * (cellSize.height + spacingY);
+      console.log({ start, end });
+      await this._tween_move(end);
+      if (success) {
+        const templateValue = tileEnd.value;
+        tileEnd.value = tileStart.value;
+        tileStart.value = templateValue;
+        tileStart.drawImage();
+        tileEnd.drawImage();
+      } else {
+        await this._tween_move(start);
+      }
+      resolve();
+    });
   };
 
   private _tween_destory = (): Promise<void> => {
@@ -171,28 +189,34 @@ export default class Tile {
   };
 
   public animation_destory = (): Promise<void> => {
+    ConsoleUtils.log(TAG, "执行销毁动画！");
     return this._tween_destory();
   };
 
-  private _tween_create = (): Promise<void> => {
-    this.nodeTile.NodeImg.setPosition(new Vec3(0, 200, 0));
+  private _tween_create = (offsetCount: number): Promise<void> => {
+    const startY = (this._size + this._spacing) * offsetCount;
+    this.drawImage();
+    this.nodeTile.NodeImg.setPosition(new Vec3(0, startY, 0));
     return new Promise((resolve) => {
-      tween(this.nodeTile.NodeImg).to(
-        GameData.TWEEN_TILE_CREATE_S,
-        {
-          position: Vec3.ZERO,
-        },
-        {
-          onComplete: () => {
-            resolve();
+      tween(this.nodeTile.NodeImg)
+        .to(
+          GameData.TWEEN_TILE_CREATE_S * offsetCount,
+          {
+            position: Vec3.ZERO,
           },
-        }
-      );
+          {
+            onComplete: () => {
+              resolve();
+            },
+          }
+        )
+        .start();
     });
   };
 
-  public animation_create = (): Promise<void> => {
-    return this._tween_create();
+  public animation_create = (offsetY: number): Promise<void> => {
+    ConsoleUtils.log(TAG, "执行创建动画！");
+    return this._tween_create(offsetY);
   };
 }
 

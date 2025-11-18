@@ -58,7 +58,7 @@ export default class GameManagement {
   }
 
   private startGame() {
-    this.game.start();
+    this.game.start(this.LayoutGrid);
     this.status = GameStatus.PLAY;
   }
 
@@ -150,9 +150,13 @@ export default class GameManagement {
         success: true,
       }),
     ]);
+    // [tileStart, tileEnd]
+    //   .filter((tile) => !tiles.includes(tile))
+    //   .forEach((tile) => tile.drawImage());
 
-    await Promise.all(tiles.map((tile) => tile.animation_destory));
+    await Promise.all(tiles.map((tile) => tile.animation_destory()));
     if (this.game.callback_matchSuccess) {
+      ConsoleUtils.log(TAG, "执行Callback_MatchSuccess");
       this.game.callback_matchSuccess();
     }
   };

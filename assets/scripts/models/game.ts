@@ -1,3 +1,4 @@
+import { Layout } from "cc";
 import GameData, { GameSize } from "../management/gameData";
 import ConsoleUtils from "../utils/consoleUtils";
 import EventUtils, {
@@ -38,20 +39,24 @@ export default class TileMatch {
     return tiles;
   }
 
-  private createMap() {
+  private createMap(layout: Layout) {
     const { size, max_golden, level } = this.options;
     this.map = [];
-
+    const maxNormalType = this.getMaxNormalTypeByLevel(level);
     // 1. 先创建基础地图（普通方块）
     for (let x = 0; x < size.width; x++) {
       this.map[x] = [];
       for (let y = 0; y < size.height; y++) {
         // 根据难度控制普通方块的类型数量
-        const maxNormalType = this.getMaxNormalTypeByLevel(level);
+
         const randomType = Math.floor(Math.random() * maxNormalType);
+
+        const { cellSize, spacingX } = layout;
         const tileOptions: TileOptions = {
           pos: { x, y },
           value: randomType,
+          tileSize: cellSize.width,
+          tileSpacing: spacingX,
         };
         this.map[x][y] = new Tile(tileOptions);
       }
@@ -75,7 +80,8 @@ export default class TileMatch {
    * 难度越高，方块种类越多，游戏越难
    */
   private getMaxNormalTypeByLevel(level: number): number {
-    const difficultySettings = [
+    return GameData.LEVEL_MAX_TILE_TYPE;
+    /* const difficultySettings = [
       {
         minLevel: 1,
         maxLevel: Infinity,
@@ -86,7 +92,7 @@ export default class TileMatch {
     const setting = difficultySettings.find(
       (s) => level >= s.minLevel && level <= s.maxLevel
     );
-    return setting ? setting.typeCount : GameData.LEVEL_MIN_TILE_TYPE; // 默认4种
+    return setting ? setting.typeCount : GameData.LEVEL_MIN_TILE_TYPE;  */
   }
 
   /**
@@ -330,8 +336,8 @@ export default class TileMatch {
     }
   }
 
-  public start() {
-    this.createMap();
+  public start(layout: Layout) {
+    this.createMap(layout);
   }
   /**
    * 交换两个方块
@@ -386,8 +392,8 @@ export default class TileMatch {
     const tempValue = tile1.value;
     tile1.value = tile2.value;
     tile2.value = tempValue;
-    tile1.drawImage();
-    tile2.drawImage();
+    // tile1.drawImage();
+    // tile2.drawImage();
   }
 
   /**
@@ -401,7 +407,7 @@ export default class TileMatch {
    */
   private getMatchesAt(x: number, y: number): Tile[] {
     const tile = this.map[x][y];
-    if (tile.value === TileValue.BTC) return []; // 金币不参与匹配
+    // if (tile.value === TileValue.BTC) return [];
 
     const matchedTiles: Tile[] = [];
     const tileType = tile.value;
@@ -476,8 +482,14 @@ export default class TileMatch {
     let goldenCount = 0;
     let normalCount = 0;
 
+    let offsetY = 0;
     // 消除方块
+    let lastY = -1;
     for (const tile of tiles) {
+      if (lastY !== tile.pos.y) {
+        offsetY++;
+      }
+      lastY = tile.pos.y;
       if (tile.value === TileValue.BTC) {
         goldenCount++;
       } else {
@@ -492,20 +504,20 @@ export default class TileMatch {
 
     this.callback_matchSuccess = () => {
       // 方块下落
-      this.applyGravity();
+      this.applyGravity(offsetY);
 
       // 填充新的方块
-      this.fillEmptyTiles();
-
-      // 检查是否还有可消除的组合
-      if (!this.checkMapHasResult()) {
-        console.log("没有可消除的组合了，重新整理地图");
-        this.refershMap();
-      }
-
-      // 检查游戏是否结束
-      this.checkGameEnd();
+      this.fillEmptyTiles(offsetY);
     };
+
+    // 检查是否还有可消除的组合
+    if (!this.checkMapHasResult()) {
+      console.log("没有可消除的组合了，重新整理地图");
+      this.refershMap();
+    }
+
+    // 检查游戏是否结束
+    this.checkGameEnd();
   }
 
   private drawMap() {
@@ -619,7 +631,7 @@ export default class TileMatch {
   /**
    * 应用重力，让方块下落
    */
-  private applyGravity(): void {
+  private applyGravity(offsetY: number): void {
     const { width, height } = this.options.size;
 
     for (let x = 0; x < width; x++) {
@@ -632,7 +644,8 @@ export default class TileMatch {
             if (this.map[x][aboveY].value !== -1) {
               // 下落
               this.map[x][y].value = this.map[x][aboveY].value;
-              this.map[x][aboveY].value = -1 as TileValue;
+              this.map[x][aboveY].value = TileValue.EMPTY;
+              this.map[x][y].animation_create(offsetY);
               break;
             }
           }
@@ -644,7 +657,7 @@ export default class TileMatch {
   /**
    * 填充空白格子
    */
-  private fillEmptyTiles(): void {
+  private fillEmptyTiles(offsetY: number): void {
     const { width, height } = this.options.size;
     const { level } = this.options;
     const maxNormalType = this.getMaxNormalTypeByLevel(level);
@@ -654,7 +667,7 @@ export default class TileMatch {
         if (this.map[x][y].value === -1) {
           const randomType = Math.floor(Math.random() * maxNormalType);
           this.map[x][y].value = randomType;
-          this.map[x][y].drawImage();
+          this.map[x][y].animation_create(offsetY);
         }
       }
     }
