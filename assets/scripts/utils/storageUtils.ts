@@ -6,6 +6,7 @@ enum StorageKey {
   SETTING_SPEACILSOUND = "setting_speacilsound",
   SETTING_MUSIC = "setting_music",
   SETTING_SHAKE = "setting_shake",
+  LEVEL_DATA = "LEVEL_DATA",
 }
 
 class StorageUtils {

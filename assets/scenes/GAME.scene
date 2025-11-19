@@ -295,6 +295,9 @@
     "_active": true,
     "_components": [
       {
+        "__id__": 40
+      },
+      {
         "__id__": 41
       },
       {
@@ -489,10 +492,10 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 39
+        "__id__": 38
       },
       {
-        "__id__": 40
+        "__id__": 39
       }
     ],
     "_prefab": null,
@@ -538,16 +541,16 @@
         "__id__": 14
       },
       {
-        "__id__": 34
+        "__id__": 33
       }
     ],
     "_active": true,
     "_components": [
       {
-        "__id__": 37
+        "__id__": 36
       },
       {
-        "__id__": 38
+        "__id__": 37
       }
     ],
     "_prefab": null,
@@ -596,10 +599,10 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 32
+        "__id__": 31
       },
       {
-        "__id__": 33
+        "__id__": 32
       }
     ],
     "_prefab": null,
@@ -1199,11 +1202,7 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "clickEvents": [
-      {
-        "__id__": 31
-      }
-    ],
+    "clickEvents": [],
     "_interactable": true,
     "_transition": 3,
     "_normalColor": {
@@ -1242,16 +1241,6 @@
     "_zoomScale": 0.9,
     "_target": null,
     "_id": "f98A195aRJBoqCHC6d67e7"
-  },
-  {
-    "__type__": "cc.ClickEvent",
-    "target": {
-      "__id__": 15
-    },
-    "component": "",
-    "_componentId": "a7912TkQIBHOIlJVTl7bt47",
-    "handler": "event_click",
-    "customEventData": ""
   },
   {
     "__type__": "cc.UITransform",
@@ -1317,10 +1306,10 @@
     "_active": true,
     "_components": [
       {
-        "__id__": 35
+        "__id__": 34
       },
       {
-        "__id__": 36
+        "__id__": 35
       }
     ],
     "_prefab": null,
@@ -1359,7 +1348,7 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 34
+      "__id__": 33
     },
     "_enabled": true,
     "__prefab": null,
@@ -1381,7 +1370,7 @@
     "_objFlags": 0,
     "__editorExtras__": {},
     "node": {
-      "__id__": 34
+      "__id__": 33
     },
     "_enabled": true,
     "__prefab": null,
@@ -1562,6 +1551,18 @@
     "_id": "ee65heKhtNkqtBaK8Rfoza"
   },
   {
+    "__type__": "9efe6q5x8NI0a3jn7WmuvTk",
+    "_name": "",
+    "_objFlags": 0,
+    "__editorExtras__": {},
+    "node": {
+      "__id__": 7
+    },
+    "_enabled": true,
+    "__prefab": null,
+    "_id": "38kQZm5xNHFZHkk8Z6bw75"
+  },
+  {
     "__type__": "cc.Node",
     "_name": "Page_Game",
     "_objFlags": 0,
@@ -1577,7 +1578,7 @@
         "__id__": 48
       }
     ],
-    "_active": true,
+    "_active": false,
     "_components": [
       {
         "__id__": 131
