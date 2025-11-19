@@ -2,7 +2,7 @@ import { instantiate } from "cc";
 import { NodeTile } from "../../components/SceneGames/NodeTile";
 import PrefabUtils from "../utils/prefabUtils";
 import ConsoleUtils from "../utils/consoleUtils";
-import { getEnumKey } from "../enum";
+import { getEnumey, getEnumKey } from "../enum";
 import TouchUtils, { MoveDirection } from "../utils/touchUtils";
 import { Vec2 } from "cc";
 import GameData from "../management/gameData";

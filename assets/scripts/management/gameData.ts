@@ -16,7 +16,7 @@ export default class GameData {
 
   public static TWEEN_TILE_MOVE_S = 0.2;
 
-  public static TWEEN_TILE_CREATE_S = 0.2;
+  public static TWEEN_TILE_CREATE_S = 0.1;
 
-  public static TWEEN_TILE_DESTORY_S = 0.15;
+  public static TWEEN_TILE_DESTORY_S = 0.1;
 }

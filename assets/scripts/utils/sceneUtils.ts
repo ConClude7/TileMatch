@@ -1,7 +1,8 @@
 import { director, Director, Scene, SceneAsset } from "cc";
 import ConsoleUtils from "../utils/consoleUtils";
-import { getEnumkey } from "../enum/index";
+
 import { log } from "cc";
+import { getEnumey } from "../enum";
 
 enum GameScene {
   Home = "HOME",
@@ -17,7 +18,7 @@ class SceneUtils {
       return null;
     }
     const sceneName = nowScene.name;
-    const gameScene = getEnumkey(GameScene, sceneName);
+    const gameScene = getEnumey(GameScene, sceneName);
     ConsoleUtils.log("获取当前场景", { gameScene }, true);
     return gameScene;
   }

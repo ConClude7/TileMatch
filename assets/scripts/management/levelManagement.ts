@@ -15,7 +15,7 @@ export default class LevelManager {
     return this._singleton;
   }
 
-  private maxLevel = 5;
+  private maxLevel = 9;
   private storageKey = StorageKey.LEVEL_DATA;
 
   private createEmptyData() {

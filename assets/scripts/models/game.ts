@@ -43,18 +43,20 @@ export default class TileMatch {
     const { size, max_golden, level } = this.options;
     this.map = [];
     const maxNormalType = this.getMaxNormalTypeByLevel(level);
-    // 1. 先创建基础地图（普通方块）
+
+    // 1. 使用洗牌算法创建随机但均匀分布的花色
+    const totalTiles = size.width * size.height;
+    const randomTypes = this.createRandomTileTypes(totalTiles, maxNormalType);
+    let typeIndex = 0;
+
+    // 2. 创建基础地图（普通方块）
     for (let x = 0; x < size.width; x++) {
       this.map[x] = [];
       for (let y = 0; y < size.height; y++) {
-        // 根据难度控制普通方块的类型数量
-
-        const randomType = Math.floor(Math.random() * maxNormalType);
-
         const { cellSize, spacingX } = layout;
         const tileOptions: TileOptions = {
           pos: { x, y },
-          value: randomType,
+          value: randomTypes[typeIndex++], // 使用洗牌后的花色
           tileSize: cellSize.width,
           tileSpacing: spacingX,
         };
@@ -62,10 +64,10 @@ export default class TileMatch {
       }
     }
 
-    // 2. 随机放置金币格子
+    // 3. 随机放置金币格子
     this.placeGoldenTiles(max_golden);
 
-    // 3. 确保初始地图没有可直接消除的组合
+    // 4. 确保初始地图没有可直接消除的组合
     this.ensureNoInitialMatches().then(() => {
       ConsoleUtils.log(
         TAG,
@@ -73,6 +75,47 @@ export default class TileMatch {
       );
       EventUtils.emit(EventKey.MAP_CREATE, { data: {}, success: true });
     });
+  }
+
+  /**
+   * 创建随机但均匀分布的花色数组
+   * @param totalTiles 总格子数
+   * @param maxType 最大花色类型数
+   * @returns 洗牌后的花色数组
+   */
+  private createRandomTileTypes(totalTiles: number, maxType: number): number[] {
+    const tiles: number[] = [];
+
+    // 确保每种花色出现次数大致相等
+    for (let type = 0; type < maxType; type++) {
+      const countPerType = Math.floor(totalTiles / maxType);
+      for (let i = 0; i < countPerType; i++) {
+        tiles.push(type);
+      }
+    }
+
+    // 补充分配剩余的位置
+    const remaining = totalTiles % maxType;
+    for (let i = 0; i < remaining; i++) {
+      tiles.push(i % maxType);
+    }
+
+    // 使用 Fisher-Yates 洗牌算法随机打乱顺序
+    return this.shuffleArray(tiles);
+  }
+
+  /**
+   * Fisher-Yates 洗牌算法
+   * @param array 要洗牌的数组
+   * @returns 洗牌后的数组
+   */
+  private shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
   }
 
   /**
@@ -329,12 +372,12 @@ export default class TileMatch {
   /**
    * 数组随机打乱
    */
-  private shuffleArray(array: any[]): void {
+  /*   private shuffleArray(array: any[]): void {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [array[i], array[j]] = [array[j], array[i]];
     }
-  }
+  } */
 
   public start(layout: Layout) {
     this.createMap(layout);
@@ -350,10 +393,10 @@ export default class TileMatch {
     }
 
     // 检查是否都是金币（金币不能交换）
-    if (start.value === TileValue.BTC && end.value === TileValue.BTC) {
-      console.log("金币不能互相交换");
-      return false;
-    }
+    // if (start.value === TileValue.BTC && end.value === TileValue.BTC) {
+    //   console.log("金币不能互相交换");
+    //   return false;
+    // }
 
     // 执行交换
     this.swapTiles(start, end);

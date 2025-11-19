@@ -50,11 +50,16 @@ export default class GameManagement {
     this.status = GameStatus.STOP;
   }
 
+  private _isInitialized = false;
   public init() {
+    if (this._isInitialized) {
+      this.destory(); // 清理之前的实例
+    }
     EventUtils.on(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.on(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
     EventUtils.on(EventKey.TILE_MATCH, this.event_tile_match, this);
     this.startGame();
+    this._isInitialized = true;
   }
 
   private startGame() {
@@ -63,9 +68,13 @@ export default class GameManagement {
   }
 
   public destory() {
+    ConsoleUtils.warn(TAG, "destory!");
     EventUtils.off(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.off(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
     EventUtils.off(EventKey.TILE_MATCH, this.event_tile_match, this);
+
+    this.status = GameStatus.STOP;
+    this._isInitialized = false;
   }
 
   private drawMap = ({ isUpdate = false }) => {

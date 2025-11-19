@@ -19,27 +19,40 @@ enum EventKey {
 class EventUtils {
   private static eventTarget = new EventTarget();
   private constructor() {}
-  // public static Instance = new EventUtils();
 
   public static on = <T = any>(
     key: EventKey,
     callback: (data: EventData<T>) => void,
-    target: any
+    target?: any
   ) => {
-    this.eventTarget.on(key, (e: EventData) => callback(e), target);
+    this.eventTarget.on(key, callback, target);
   };
 
   public static off = <T = any>(
     key: EventKey,
-    callback: Function,
-    target: any
+    callback: (data: EventData<T>) => void,
+    target?: any
   ) => {
-    this.eventTarget.off(key, (e: EventData<T>) => callback(e), target);
+    this.eventTarget.off(key, callback, target);
   };
 
   public static emit = (key: EventKey, data: EventData) => {
     ConsoleUtils.log(`Event{${key}}`, data);
     this.eventTarget.emit(key, data);
+  };
+
+  // 添加一次性事件监听
+  public static once = <T = any>(
+    key: EventKey,
+    callback: (data: EventData<T>) => void,
+    target?: any
+  ) => {
+    this.eventTarget.once(key, callback, target);
+  };
+
+  // 移除目标的所有事件监听
+  public static removeAll = (target: any) => {
+    this.eventTarget.targetOff(target);
   };
 }
 
