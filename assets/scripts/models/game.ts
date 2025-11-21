@@ -12,6 +12,8 @@ export interface GameOptions {
   size: GameSize; // 地图尺寸
   max_golden: number; // 最大金币数量
   level: number; // 难度: MIN: 1
+  time: number; // 时间 second
+  score: number; // 积分
 }
 
 export type GameMap = Array<Array<Tile>>;

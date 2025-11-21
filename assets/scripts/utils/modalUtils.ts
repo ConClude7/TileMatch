@@ -45,7 +45,7 @@ export default class ModalUtils {
   }
 
   /// Show modal,won't destory last modal.
-  private static show(prefab: Prefab | null): Node | null {
+  public static show(prefab: Prefab | null): Node | null {
     if (!prefab) {
       ConsoleUtils.warn("ModalUtils", { msg: "Prefab is Null!" });
       return null;

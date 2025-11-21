@@ -28,7 +28,7 @@ export class TimerUtils {
 
   /**
    *
-   * @param totalTime 总时长，0 代表无限不停止，单位ms
+   * @param totalTime 总时长，0 代表无限不停止，单位S
    * @param stepTime 回调步长，单位ms
    */
   public constructor(totalTime = 0, stepTime = 1000) {
@@ -74,7 +74,7 @@ export class TimerUtils {
       this._timer = setInterval(() => {
         if (this._timer === null) return;
         this._currentTime += 1;
-        if (this.totalTime > 0 && this._currentTime >= this.totalTime) {
+        if (this.totalTime > 0 && this._currentTime > this.totalTime) {
           ConsoleUtils.log(
             "Timer",
             {

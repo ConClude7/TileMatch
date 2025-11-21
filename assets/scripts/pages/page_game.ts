@@ -7,6 +7,12 @@ const { ccclass, property } = _decorator;
 @ccclass("page_game")
 export class page_game extends Component {
   @property(Node)
+  Node_Score: Node | undefined;
+
+  @property(Node)
+  Node_Time: Node | undefined;
+
+  @property(Node)
   Node_Grid: Node | undefined;
 
   public get NodeGrid(): Node {
@@ -21,6 +27,7 @@ export class page_game extends Component {
   }
 
   onEnable() {
+    this.NodeGrid.destroyAllChildren();
     this.scheduleOnce(() => {
       if (this._manager) {
         this._manager.init();
@@ -34,7 +41,6 @@ export class page_game extends Component {
   }
 
   event_click_back() {
-    this.NodeGrid.destroyAllChildren();
     RouterUtils.back();
   }
 }

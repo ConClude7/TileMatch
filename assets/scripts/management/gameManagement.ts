@@ -12,6 +12,9 @@ import { EventTileTouchMove, TilePos } from "../models/tile";
 import { MoveDirection } from "../utils/touchUtils";
 import ConsoleUtils from "../utils/consoleUtils";
 import { Layout } from "cc";
+import { TimerUtils } from "../utils/timerUtils";
+import PrefabUtils, { PrefabType } from "../utils/prefabUtils";
+import ModalUtils from "../utils/modalUtils";
 
 const TAG = "GameManagement";
 
@@ -25,6 +28,22 @@ export default class GameManagement {
   public game: TileMatch;
   public status: GameStatus;
   private _node: page_game;
+  private timer: TimerUtils;
+  private _score: number = 0;
+  private _totalScore = 100;
+  private _totalTime = 90;
+  public set score(v: number) {
+    this._score = v;
+    this._node.Node_Score?.changeLabelString(
+      `所需分数：${this._totalScore} 当前分数：${v}`
+    );
+    if (this.score >= this._totalScore) {
+      this.gameOver(true);
+    }
+  }
+  public get score(): number {
+    return this._score;
+  }
 
   // public get node(): Node {
   //   return this._node.node;
@@ -46,8 +65,12 @@ export default class GameManagement {
       size: GameData.GAME_SIZE_DEFAULT,
       max_golden: 10,
       level: 1,
+      time: this._totalTime,
+      score: this._totalScore,
     });
     this.status = GameStatus.STOP;
+    this.timer = new TimerUtils(this._totalTime);
+    this.score = 0;
   }
 
   private _isInitialized = false;
@@ -87,8 +110,26 @@ export default class GameManagement {
     });
   };
 
+  private startTimer = () => {
+    this.timer.start(this.callback_timer);
+  };
+
+  private callback_timer = (currnetTime: number, stop: boolean) => {
+    if (stop) {
+      this.timer.stop();
+      this.status = GameStatus.STOP;
+      ConsoleUtils.warn(TAG, "Time Over!");
+      this.gameOver(false);
+    } else {
+      this._node.Node_Time?.changeLabelString(
+        `${this._totalTime - currnetTime}S`
+      );
+    }
+  };
+
   event_map_create = (e: EventData) => {
     this.drawMap({});
+    this.startTimer();
   };
 
   event_tile_touch_move = (e: EventData<EventTileTouchMove>) => {
@@ -127,6 +168,7 @@ export default class GameManagement {
 
   event_tile_match = async (e: EventData) => {
     if (this.status === GameStatus.MATCH) return;
+    if (this.status === GameStatus.STOP) return;
     try {
       this.status = GameStatus.MATCH;
       if (e.success) {
@@ -168,6 +210,7 @@ export default class GameManagement {
       ConsoleUtils.log(TAG, "执行Callback_MatchSuccess");
       this.game.callback_matchSuccess();
     }
+    this.score += tiles.length;
   };
 
   private matchError = async ({
@@ -204,5 +247,10 @@ export default class GameManagement {
     // ]);
   };
 
-  private moveTile = () => {};
+  private gameOver = (isWin: boolean) => {
+    const prefab = PrefabUtils.getPrefab(
+      isWin ? PrefabType.GAME_SUCCESS : PrefabType.GAME_FAIL
+    );
+    ModalUtils.show(prefab);
+  };
 }
