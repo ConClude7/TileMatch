@@ -189,7 +189,7 @@ export default class Tile {
   };
 
   public animation_destory = (): Promise<void> => {
-    ConsoleUtils.log(TAG, "执行销毁动画！");
+    // ConsoleUtils.log(TAG, "执行销毁动画！");
     return this._tween_destory();
   };
 
@@ -215,7 +215,7 @@ export default class Tile {
   };
 
   public animation_create = (offsetY: number): Promise<void> => {
-    ConsoleUtils.log(TAG, "执行创建动画！");
+    // ConsoleUtils.log(TAG, "执行创建动画！");
     return this._tween_create(offsetY);
   };
 }

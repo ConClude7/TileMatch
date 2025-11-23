@@ -2,6 +2,7 @@ import { _decorator, Component, Node } from "cc";
 import SceneUtils, { GameScene } from "../utils/sceneUtils";
 import { ProgressBar } from "cc";
 import SystemUtils from "../utils/systemUtils";
+import LevelManager from "../management/levelManagement";
 const { ccclass, property } = _decorator;
 
 @ccclass("scene_home")
@@ -13,6 +14,7 @@ export class scene_home extends Component {
   Button_Start: Node | undefined;
 
   onLoad() {
+    if (this.Button_Start) this.Button_Start.active = false;
     SceneUtils.preload(GameScene.GAME, (percent) => {
       if (this.ProgressBar) {
         this.ProgressBar.progress = percent;
@@ -26,6 +28,7 @@ export class scene_home extends Component {
 
   private async gameInit() {
     await SystemUtils.init();
+    await LevelManager.Instance.init();
 
     if (this.Button_Start) {
       this.Button_Start.active = true;

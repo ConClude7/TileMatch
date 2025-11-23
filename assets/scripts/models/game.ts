@@ -2,6 +2,7 @@ import { Layout } from "cc";
 import GameData, { GameSize } from "../management/gameData";
 import ConsoleUtils from "../utils/consoleUtils";
 import EventUtils, {
+  EventDataTileAutoClear,
   EventDataTileMatchError,
   EventDataTileMatchSuccess,
   EventKey,
@@ -14,6 +15,7 @@ export interface GameOptions {
   level: number; // 难度: MIN: 1
   time: number; // 时间 second
   score: number; // 积分
+  tileType: number;
 }
 
 export type GameMap = Array<Array<Tile>>;
@@ -24,9 +26,13 @@ export default class TileMatch {
 
   public constructor(options: GameOptions) {
     this.options = options;
+    ConsoleUtils.error(TAG, { msg: "TileMatch creator!" });
   }
 
   public map: GameMap = [];
+
+  public isAuto = false;
+  public isOver = false;
 
   public get tiles(): Array<Tile> {
     const { width, height } = this.options.size;
@@ -125,19 +131,7 @@ export default class TileMatch {
    * 难度越高，方块种类越多，游戏越难
    */
   private getMaxNormalTypeByLevel(level: number): number {
-    return GameData.LEVEL_MAX_TILE_TYPE;
-    /* const difficultySettings = [
-      {
-        minLevel: 1,
-        maxLevel: Infinity,
-        typeCount: GameData.LEVEL_MAX_TILE_TYPE,
-      },
-    ];
-
-    const setting = difficultySettings.find(
-      (s) => level >= s.minLevel && level <= s.maxLevel
-    );
-    return setting ? setting.typeCount : GameData.LEVEL_MIN_TILE_TYPE;  */
+    return this.options.tileType;
   }
 
   /**
@@ -229,24 +223,178 @@ export default class TileMatch {
     return new Promise((resolve) => {
       let hasMatches = true;
       let reshuffleCount = 0;
-      // 最大重排次数，防止无限循环
       const maxReshuffles = 100;
 
-      while (hasMatches && reshuffleCount < maxReshuffles) {
-        hasMatches = this.checkInitialMatches();
+      // while (hasMatches && reshuffleCount < maxReshuffles) {
+      //   hasMatches = this.checkInitialMatches();
 
-        if (hasMatches) {
-          // 如果有匹配，重新排列普通方块（保持金币位置不变）
-          this.reshuffleNormalTiles();
-          reshuffleCount++;
-        }
-      }
+      //   if (hasMatches) {
+      //     this.reshuffleNormalTiles();
+      //     reshuffleCount++;
+      //   }
+      // }
 
       if (reshuffleCount > 0) {
         ConsoleUtils.log(TAG, `重排了 ${reshuffleCount} 次以消除初始匹配`);
       }
-      resolve();
+
+      // 地图生成完成后，再次检查确保没有残留的匹配
+      setTimeout(() => {
+        this.checkAndClearMatches();
+        resolve();
+      }, 100);
     });
+  }
+
+  /**
+   * 自动检测并消除所有连续的Tile
+   * 返回是否进行了消除
+   */
+  public checkAndClearMatches(): boolean {
+    if (this.isOver) return false;
+    const { width, height } = this.options.size;
+    const allMatches: Set<Tile> = new Set();
+
+    // 1. 收集所有匹配的Tile
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const matches = this.getMatchesAt(x, y);
+        if (matches.length > 0) {
+          matches.forEach((tile) => allMatches.add(tile));
+        }
+      }
+    }
+
+    // 2. 如果没有匹配，直接返回
+    if (allMatches.size === 0) {
+      this.isAuto = false;
+      return false;
+    }
+    this.isAuto = true;
+
+    // 3. 将Set转为数组
+    const matchesArray = Array.from(allMatches);
+
+    // 4. 执行消除逻辑
+    this.autoClearMatches(matchesArray);
+
+    return true;
+  }
+
+  /**
+   * 自动清除匹配的Tile
+   */
+  private autoClearMatches(matches: Tile[]): void {
+    console.log(`自动消除 ${matches.length} 个连续方块`);
+
+    // 统计金币数量
+    let goldenCount = 0;
+    let normalCount = 0;
+
+    // 计算下落偏移量（按列统计）
+    const columnOffsets: Map<number, number> = new Map();
+
+    // 标记要消除的方块
+    for (const tile of matches) {
+      if (tile.value === TileValue.BTC) {
+        goldenCount++;
+      } else {
+        normalCount++;
+      }
+
+      // 记录这一列有一个方块被消除
+      const col = tile.pos.x;
+      columnOffsets.set(col, (columnOffsets.get(col) || 0) + 1);
+
+      // 标记为空白
+      tile.value = TileValue.EMPTY;
+    }
+
+    // 触发消除效果
+    this.onAutoClearMatched(matches, goldenCount, normalCount);
+
+    // 设置回调，在动画完成后执行下落和填充
+    this.callback_matchSuccess = () => {
+      // 方块下落
+      this.applyGravityByColumn(columnOffsets);
+
+      // 填充新的方块
+      this.fillEmptyTilesByColumn(columnOffsets);
+
+      // 递归检查是否还有新的匹配（连锁反应）
+      setTimeout(() => {
+        const hasMoreMatches = this.checkAndClearMatches();
+        if (!hasMoreMatches) {
+          // 没有更多匹配了，检查游戏状态
+          if (!this.checkMapHasResult()) {
+            console.log("没有可消除的组合了，重新整理地图");
+            this.refershMap();
+          }
+          this.checkGameEnd();
+        }
+      }, GameData.TWEEN_TILE_CREATE_S * 1000);
+    };
+  }
+
+  /**
+   * 按列应用重力
+   */
+  private applyGravityByColumn(columnOffsets: Map<number, number>): void {
+    const { height } = this.options.size;
+
+    for (const [col, offset] of columnOffsets) {
+      if (offset <= 0) continue;
+
+      // 从下往上移动该列的方块
+      for (let y = height - 1; y >= 0; y--) {
+        if (this.map[col][y].value === TileValue.EMPTY) {
+          // 在上面寻找非空白格子下落
+          for (let aboveY = y - 1; aboveY >= 0; aboveY--) {
+            if (this.map[col][aboveY].value !== TileValue.EMPTY) {
+              // 下落
+              this.map[col][y].value = this.map[col][aboveY].value;
+              this.map[col][aboveY].value = TileValue.EMPTY;
+              this.map[col][y].animation_create(offset);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * 按列填充空白格子
+   */
+  private fillEmptyTilesByColumn(columnOffsets: Map<number, number>): void {
+    const { height } = this.options.size;
+    const { level } = this.options;
+    const maxNormalType = this.getMaxNormalTypeByLevel(level);
+
+    for (const [col, offset] of columnOffsets) {
+      // 从顶部开始填充空白
+      for (let y = 0; y < height; y++) {
+        if (this.map[col][y].value === TileValue.EMPTY) {
+          const randomType = Math.floor(Math.random() * maxNormalType);
+          this.map[col][y].value = randomType;
+          this.map[col][y].animation_create(offset);
+        }
+      }
+    }
+  }
+
+  /**
+   * 自动清除匹配的事件回调
+   */
+  private onAutoClearMatched(
+    tiles: Tile[],
+    goldenCount: number,
+    normalCount: number
+  ): void {
+    // 在这里处理自动消除成功的事件
+    // 比如：更新分数、播放音效、触发特效等
+    const data: EventDataTileAutoClear = { tiles, goldenCount, normalCount };
+    EventUtils.emit(EventKey.TILE_AUTO_CLEAR, { data, success: true });
   }
 
   /**
@@ -271,8 +419,8 @@ export default class TileMatch {
    */
   private hasMatchAt(x: number, y: number): boolean {
     const { width, height } = this.options.size;
-    const tile = this.map[x][y];
-    if (tile.value === TileValue.BTC) return false; // 金币不参与匹配
+    const tile = this.map[x][y]; // 金币不参与匹配
+    // if (tile.value === TileValue.BTC) return false;
 
     const tileType = tile.value;
 
@@ -342,11 +490,7 @@ export default class TileMatch {
     // 收集所有普通方块和金币位置
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        if (this.map[x][y].value === TileValue.BTC) {
-          goldenPositions.push({ x, y });
-        } else {
-          normalTiles.push(this.map[x][y]);
-        }
+        normalTiles.push(this.map[x][y]);
       }
     }
 
@@ -541,7 +685,7 @@ export default class TileMatch {
         normalCount++;
       }
       // 标记为空白（可以用一个特殊值表示，比如 -1）
-      tile.value = -1 as TileValue;
+      tile.value = TileValue.EMPTY;
     }
 
     // 触发消除效果、播放动画、加分等
@@ -553,6 +697,11 @@ export default class TileMatch {
 
       // 填充新的方块
       this.fillEmptyTiles(offsetY);
+
+      // 下落和填充完成后，检查是否有新的匹配
+      setTimeout(() => {
+        this.checkAndClearMatches();
+      }, GameData.TWEEN_TILE_MOVE_S * 1000);
     };
 
     // 检查是否还有可消除的组合

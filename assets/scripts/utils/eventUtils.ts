@@ -10,11 +10,13 @@ type EventData<T = any> = {
 
 enum EventKey {
   ROUTER = "ROUTER",
+  ROUTER_BACK = "ROUTER_BACK",
   CHANGE_NETWORK = "CHANGE_NETWORK",
   CALL_ELEVATOR = "CALL_ELEVATOR",
   MAP_CREATE = "MAP_CREATE",
   TILE_TOUCH_MOVE = "TILE_TOUCH_MOVE",
   TILE_MATCH = "TILE_MATCH",
+  TILE_AUTO_CLEAR = "TILE_AUTO_CLEAR",
 }
 class EventUtils {
   private static eventTarget = new EventTarget();
@@ -68,4 +70,10 @@ export interface EventDataTileMatchSuccess {
 export interface EventDataTileMatchError {
   tileStart: Tile;
   tileEnd: Tile;
+}
+
+export interface EventDataTileAutoClear {
+  tiles: Tile[];
+  goldenCount: number;
+  normalCount: number;
 }

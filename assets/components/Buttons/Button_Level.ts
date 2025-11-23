@@ -1,4 +1,5 @@
 import { _decorator, Component, Node } from "cc";
+import { LevelData } from "../../scripts/management/levelManagement";
 const { ccclass, property } = _decorator;
 
 @ccclass("Button_Level")
@@ -18,12 +19,20 @@ export class Button_Level extends Component {
   }
   public set level(v: number) {
     this._level = v;
-    this.Label_Level.changeLabelString(String(v));
+    this.Label_Level?.changeLabelString(String(v));
   }
 
   start() {}
 
   update(deltaTime: number) {}
 
-  event_click() {}
+  show_on() {
+    if (this.Node_Off) this.Node_Off.active = false;
+    if (this.Node_On) this.Node_On.active = true;
+  }
+
+  initView(data: LevelData) {
+    const { level } = data;
+    this.level = level;
+  }
 }

@@ -57,7 +57,7 @@ export class TimerUtils {
   public clear() {
     this.stop();
     if (this.callBack) {
-      this.callBack(this._currentTime, true);
+      // this.callBack(this._currentTime, true);
       this.callBack = null;
     }
     this._currentTime = 0;

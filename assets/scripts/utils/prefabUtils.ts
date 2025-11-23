@@ -6,6 +6,7 @@ export enum PrefabType {
   TILE = "Box_Tile",
   GAME_SUCCESS = "Modal_Success",
   GAME_FAIL = "Modal_Fail",
+  SCORE_ADD = "Score_Add",
 }
 
 @ccclass("prefabView")

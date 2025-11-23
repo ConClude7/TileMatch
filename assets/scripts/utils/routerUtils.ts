@@ -120,6 +120,10 @@ export default class RouterUtils {
       return null;
     }
     const popItem = lastItem;
+    EventUtils.emit(EventKey.ROUTER_BACK, {
+      data: popItem.page,
+      success: true,
+    });
     this.lastPageVisible(false, true);
     this._routes.delete(this.last_index);
     this.lastPageVisible(true);

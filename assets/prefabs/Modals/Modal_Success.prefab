@@ -182,7 +182,7 @@
       "r": 0,
       "g": 0,
       "b": 0,
-      "a": 100
+      "a": 150
     },
     "_spriteFrame": {
       "__uuid__": "a4881f9b-598a-45bc-91cd-96018b2bbe0d@f9941",
@@ -816,6 +816,7 @@
       "__id__": 0
     },
     "fileId": "345tS27+ZC7J1tlZKFr9xz",
+    "instance": null,
     "targetOverrides": null
   }
 ]
