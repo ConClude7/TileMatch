@@ -1389,24 +1389,74 @@
     "Button_Start": {
       "__id__": 11
     },
+    "Bgm_Home": {
+      "__uuid__": "8a1efad5-f03b-4e0d-863d-2a8d5aadaa95",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "Bgm_Game": {
+      "__uuid__": "7ce118f3-e916-4b6b-aa73-f38c06c69be2",
+      "__expectedType__": "cc.AudioClip"
+    },
     "Sound_ButtonClick": {
-      "__uuid__": "4bcc96d1-cbea-4b4b-ba22-bef6505b79d6",
+      "__uuid__": "f738e565-3662-4b8f-b753-ffda02c59bca",
       "__expectedType__": "cc.AudioClip"
     },
     "Sound_TileDestorys": [
       {
-        "__uuid__": "0ea297fd-9212-40e8-b57a-81a1c52d7cf7",
+        "__uuid__": "a0fa65b2-e831-4327-8518-43544e5f1e6d",
         "__expectedType__": "cc.AudioClip"
       },
       {
-        "__uuid__": "de1a26b1-0a6e-4712-9d9e-ba949cba719c",
+        "__uuid__": "cbf7ff4b-db43-4693-8b78-e1dfceeb9dfe",
         "__expectedType__": "cc.AudioClip"
       },
       {
-        "__uuid__": "656d71ec-d67a-417f-bcb8-cdd15b6793a8",
+        "__uuid__": "9228343c-4f48-460c-9c17-cf2cd97fd373",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "116a10f8-696c-4b27-acc2-7d1da9ecb9e2",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "8309a43f-f4c1-4583-a93b-8c3c12d99363",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "1a322f75-2746-4daf-89ba-2fd9322a1bcb",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "ec149e01-705d-4afc-b9cc-5f1948f07711",
         "__expectedType__": "cc.AudioClip"
       }
     ],
+    "Sound_BigDestorys": [
+      {
+        "__uuid__": "4f5541c6-eb95-405b-8fb7-63cf4b1d92ed",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "43cf62e3-6641-4f2a-93a8-e5a5a40ffc78",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "fc8f61de-1554-40e5-85b3-eb9b5934c701",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "c57459d3-b045-47c7-abde-c680c1832231",
+        "__expectedType__": "cc.AudioClip"
+      }
+    ],
+    "Sound_Win": {
+      "__uuid__": "812312f7-6f43-4fac-806c-d166d34256ec",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "Soune_Fail": {
+      "__uuid__": "c19f6c0b-ad49-4e0f-8cc7-1b41530fd514",
+      "__expectedType__": "cc.AudioClip"
+    },
     "_id": "11MQqKHIBKIrjxycCQgTJn"
   },
   {

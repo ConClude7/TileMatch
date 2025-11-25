@@ -47,6 +47,9 @@ export class page_level extends Component {
   event_router = (e: EventData<RouterPage>) => {
     if (e.data === RouterPage.LEVEL) {
       this.initView();
+      AudioUtils.playBgmHome();
+    } else if (e.data === RouterPage.GAME) {
+      AudioUtils.playBgmGame();
     }
   };
 

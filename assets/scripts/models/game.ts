@@ -316,24 +316,27 @@ export default class TileMatch {
 
     // 设置回调，在动画完成后执行下落和填充
     this.callback_matchSuccess = () => {
-      // 方块下落
-      this.applyGravityByColumn(columnOffsets);
+      return new Promise((resolve) => {
+        // 方块下落
+        this.applyGravityByColumn(columnOffsets);
 
-      // 填充新的方块
-      this.fillEmptyTilesByColumn(columnOffsets);
+        // 填充新的方块
+        this.fillEmptyTilesByColumn(columnOffsets);
 
-      // 递归检查是否还有新的匹配（连锁反应）
-      setTimeout(() => {
-        const hasMoreMatches = this.checkAndClearMatches();
-        if (!hasMoreMatches) {
-          // 没有更多匹配了，检查游戏状态
-          if (!this.checkMapHasResult()) {
-            console.log("没有可消除的组合了，重新整理地图");
-            this.refershMap();
+        // 递归检查是否还有新的匹配（连锁反应）
+        setTimeout(() => {
+          const hasMoreMatches = this.checkAndClearMatches();
+          if (!hasMoreMatches) {
+            // 没有更多匹配了，检查游戏状态
+            if (!this.checkMapHasResult()) {
+              console.log("没有可消除的组合了，重新整理地图");
+              this.refershMap();
+            }
+            this.checkGameEnd();
           }
-          this.checkGameEnd();
-        }
-      }, GameData.TWEEN_TILE_CREATE_S * 4000);
+          resolve(hasMoreMatches);
+        }, GameData.TWEEN_TILE_CREATE_S * 2000);
+      });
     };
   }
 
@@ -660,7 +663,7 @@ export default class TileMatch {
   /**
    * 匹配成功处理
    */
-  public callback_matchSuccess: (() => void) | null = null;
+  public callback_matchSuccess: (() => Promise<boolean>) | null = null;
   private matchSuccess(
     tileStart: Tile,
     tileEnd: Tile,
@@ -693,16 +696,19 @@ export default class TileMatch {
     this.onTilesMatched(tileStart, tileEnd, tiles, goldenCount, normalCount);
 
     this.callback_matchSuccess = () => {
-      // 方块下落
-      this.applyGravity(offsetY);
+      return new Promise((resolve) => {
+        // 方块下落
+        this.applyGravity(offsetY);
 
-      // 填充新的方块
-      this.fillEmptyTiles(offsetY);
+        // 填充新的方块
+        this.fillEmptyTiles(offsetY);
 
-      // 下落和填充完成后，检查是否有新的匹配
-      setTimeout(() => {
-        this.checkAndClearMatches();
-      }, GameData.TWEEN_TILE_MOVE_S * 4000);
+        // 下落和填充完成后，检查是否有新的匹配
+        setTimeout(() => {
+          const hasNext = this.checkAndClearMatches();
+          resolve(hasNext);
+        }, GameData.TWEEN_TILE_CREATE_S * 2000);
+      });
     };
 
     // 检查是否还有可消除的组合

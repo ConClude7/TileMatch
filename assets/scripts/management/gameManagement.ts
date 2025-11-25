@@ -39,6 +39,7 @@ export default class GameManagement {
   private _score: number = 0;
   private _totalScore = 1000;
   private _totalTime = 90;
+  private _autoTotal = 0;
   public set score(v: number) {
     this._score = v;
     this._node.Node_Score?.changeLabelString(
@@ -195,18 +196,25 @@ export default class GameManagement {
   };
 
   event_auto_clear = async (e: EventData<EventDataTileAutoClear>) => {
+    this._autoTotal += 1;
     const { tiles } = e.data;
-    AudioUtils.playTileDestory();
+    AudioUtils.playTileDestory(this._autoTotal);
     await Promise.all(tiles.map((tile) => tile.animation_destory()));
     this.playBombTween(tiles);
     if (this.game.callback_matchSuccess) {
       ConsoleUtils.log(TAG, "执行Callback_MatchSuccess_AUTO");
-      this.game.callback_matchSuccess();
+      this.game.callback_matchSuccess().then((hasNext) => {
+        if (!hasNext && this._autoTotal >= 4) {
+          AudioUtils.playBigDestory(this._autoTotal);
+        }
+      });
       this.score += e.data.tiles.length;
     }
   };
 
   event_tile_match = async (e: EventData) => {
+    this._autoTotal = 1;
+
     console.error({ status: this.status });
     if (this.status === GameStatus.OVER) return;
     if (this.status === GameStatus.MATCH) return;
@@ -214,6 +222,7 @@ export default class GameManagement {
     try {
       this.status = GameStatus.MATCH;
       if (e.success) {
+        AudioUtils.playTileDestory(this._autoTotal);
         await this.matchSuccess(e.data);
       } else {
         await this.matchError(e.data);
@@ -246,7 +255,6 @@ export default class GameManagement {
     // [tileStart, tileEnd]
     //   .filter((tile) => !tiles.includes(tile))
     //   .forEach((tile) => tile.drawImage());
-    AudioUtils.playTileDestory();
     await Promise.all(tiles.map((tile) => tile.animation_destory()));
     if (this.game.callback_matchSuccess) {
       ConsoleUtils.log(TAG, "执行Callback_MatchSuccess");
@@ -297,6 +305,7 @@ export default class GameManagement {
     if (this.status === GameStatus.OVER) {
       return;
     }
+    AudioUtils.playOver(isWin);
     this.status = GameStatus.OVER;
     if (isWin) {
       LevelManager.Instance.gameWin();

@@ -28,51 +28,51 @@ export default class LevelManager {
     switch (this.currentGameLevel) {
       case 1:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 60,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       case 2:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 80,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       case 3:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 100,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       case 4:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 120,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       case 5:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 150,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       case 6:
         Object.assign(levelConfig, {
-          TILE_TYPE: 7,
-          TOTAL_SCORE: 180,
-          TOTAL_TIME: 90,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
       default:
         Object.assign(levelConfig, {
           TILE_TYPE: 5,
-          TOTAL_SCORE: 200,
-          TOTAL_TIME: 90,
+          TOTAL_SCORE: 400,
+          TOTAL_TIME: 300,
         });
         break;
     }

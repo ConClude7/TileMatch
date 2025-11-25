@@ -8,8 +8,15 @@ export default class AudioUtils {
   private static _audioSource: AudioSource | null = null;
 
   // 静态音频资源声明
+  public static bgm_home: AudioClip | undefined;
+  public static bgm_game: AudioClip | undefined;
+
   public static sound_button_click: AudioClip | undefined;
   public static sound_tileDestory: AudioClip[];
+  public static sound_bigDestory: AudioClip[];
+
+  public static sound_win: AudioClip | undefined;
+  public static sound_fail: AudioClip | undefined;
 
   public static init = () => {
     if (this._instance === null) {
@@ -87,7 +94,45 @@ export default class AudioUtils {
     this.playOneShot(this.sound_button_click);
   };
 
-  public static playTileDestory = () => {
-    this.playOneShot(this.sound_tileDestory[math.randomRangeInt(0, 2)]);
+  public static playTileDestory = (num: number) => {
+    const targetNum = Math.min(Math.max(1, num), 7);
+    this.playOneShot(this.sound_tileDestory[targetNum - 1]);
+  };
+
+  public static playBigDestory = (num: number) => {
+    let targetNum = 1;
+    switch (num) {
+      case 4:
+        targetNum = 1;
+        break;
+      case 5:
+        targetNum = 2;
+        break;
+      case 6:
+        targetNum = 3;
+        break;
+      default:
+        targetNum = 4;
+        break;
+    }
+    this.playOneShot(this.sound_bigDestory[targetNum - 1]);
+  };
+
+  public static playBgmHome = () => {
+    if (!this.bgm_home) return;
+    this.stopBGM();
+    this.playBGM(this.bgm_home);
+  };
+
+  public static playBgmGame = () => {
+    if (!this.bgm_game) return;
+    this.stopBGM();
+    this.playBGM(this.bgm_game);
+  };
+
+  public static playOver = (win: boolean) => {
+    const targetSound = win ? this.sound_win : this.sound_fail;
+    if (!targetSound) return;
+    this.playOneShot(targetSound);
   };
 }

@@ -16,10 +16,25 @@ export class scene_home extends Component {
   Button_Start: Node | undefined;
 
   @property(AudioClip)
+  Bgm_Home: AudioClip | undefined;
+
+  @property(AudioClip)
+  Bgm_Game: AudioClip | undefined;
+
+  @property(AudioClip)
   Sound_ButtonClick: AudioClip | undefined;
 
   @property([AudioClip])
   Sound_TileDestorys: Array<AudioClip> = [];
+
+  @property([AudioClip])
+  Sound_BigDestorys: Array<AudioClip> = [];
+
+  @property(AudioClip)
+  Sound_Win: AudioClip | undefined;
+
+  @property(AudioClip)
+  Soune_Fail: AudioClip | undefined;
 
   onLoad() {
     if (this.Button_Start) this.Button_Start.active = false;
@@ -37,10 +52,14 @@ export class scene_home extends Component {
   private async gameInit() {
     await SystemUtils.init();
     AudioUtils.init();
+    AudioUtils.bgm_home = this.Bgm_Home;
+    AudioUtils.bgm_game = this.Bgm_Game;
+    AudioUtils.sound_bigDestory = this.Sound_BigDestorys;
     AudioUtils.sound_button_click = this.Sound_ButtonClick;
     AudioUtils.sound_tileDestory = this.Sound_TileDestorys;
+    AudioUtils.sound_win = this.Sound_Win;
+    AudioUtils.sound_fail = this.Soune_Fail;
     await LevelManager.Instance.init();
-
     if (this.Button_Start) {
       this.Button_Start.active = true;
     }
