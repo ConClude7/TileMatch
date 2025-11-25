@@ -261,6 +261,7 @@ export default class TileMatch {
         const matches = this.getMatchesAt(x, y);
         if (matches.length > 0) {
           matches.forEach((tile) => allMatches.add(tile));
+          break;
         }
       }
     }
@@ -332,7 +333,7 @@ export default class TileMatch {
           }
           this.checkGameEnd();
         }
-      }, GameData.TWEEN_TILE_CREATE_S * 1000);
+      }, GameData.TWEEN_TILE_CREATE_S * 4000);
     };
   }
 
@@ -701,7 +702,7 @@ export default class TileMatch {
       // 下落和填充完成后，检查是否有新的匹配
       setTimeout(() => {
         this.checkAndClearMatches();
-      }, GameData.TWEEN_TILE_MOVE_S * 1000);
+      }, GameData.TWEEN_TILE_MOVE_S * 4000);
     };
 
     // 检查是否还有可消除的组合

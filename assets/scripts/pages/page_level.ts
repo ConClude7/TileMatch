@@ -7,6 +7,7 @@ import RouterUtils, { RouterPage } from "../utils/routerUtils";
 import LevelManager, { LevelData } from "../management/levelManagement";
 import { Button_Level } from "../../components/Buttons/Button_Level";
 import EventUtils, { EventData, EventKey } from "../utils/eventUtils";
+import AudioUtils from "../utils/audioUtils";
 const { ccclass, property } = _decorator;
 
 const TAG = "page_level";
@@ -98,6 +99,7 @@ export class page_level extends Component {
     this._manager.currentGameLevel = level;
     this._manager.updateLevelData(copyData);
     ConsoleUtils.log(TAG, { level, msg: "Click Button!" });
+    AudioUtils.playButton();
     RouterUtils.go(RouterPage.GAME);
   };
 }

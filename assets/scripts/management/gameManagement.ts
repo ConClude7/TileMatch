@@ -20,6 +20,7 @@ import LevelManager from "./levelManagement";
 import { instantiate } from "cc";
 import { ScoreAdd } from "../../components/SceneGames/ScoreAdd";
 import { find } from "cc";
+import AudioUtils from "../utils/audioUtils";
 
 const TAG = "GameManagement";
 
@@ -195,6 +196,7 @@ export default class GameManagement {
 
   event_auto_clear = async (e: EventData<EventDataTileAutoClear>) => {
     const { tiles } = e.data;
+    AudioUtils.playTileDestory();
     await Promise.all(tiles.map((tile) => tile.animation_destory()));
     this.playBombTween(tiles);
     if (this.game.callback_matchSuccess) {
@@ -244,7 +246,7 @@ export default class GameManagement {
     // [tileStart, tileEnd]
     //   .filter((tile) => !tiles.includes(tile))
     //   .forEach((tile) => tile.drawImage());
-
+    AudioUtils.playTileDestory();
     await Promise.all(tiles.map((tile) => tile.animation_destory()));
     if (this.game.callback_matchSuccess) {
       ConsoleUtils.log(TAG, "执行Callback_MatchSuccess");

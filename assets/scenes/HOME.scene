@@ -1389,6 +1389,24 @@
     "Button_Start": {
       "__id__": 11
     },
+    "Sound_ButtonClick": {
+      "__uuid__": "4bcc96d1-cbea-4b4b-ba22-bef6505b79d6",
+      "__expectedType__": "cc.AudioClip"
+    },
+    "Sound_TileDestorys": [
+      {
+        "__uuid__": "0ea297fd-9212-40e8-b57a-81a1c52d7cf7",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "de1a26b1-0a6e-4712-9d9e-ba949cba719c",
+        "__expectedType__": "cc.AudioClip"
+      },
+      {
+        "__uuid__": "656d71ec-d67a-417f-bcb8-cdd15b6793a8",
+        "__expectedType__": "cc.AudioClip"
+      }
+    ],
     "_id": "11MQqKHIBKIrjxycCQgTJn"
   },
   {

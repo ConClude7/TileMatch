@@ -1,79 +1,79 @@
 import { AudioClip, AudioSource, resources } from "cc";
-import ConsoleUtils from "./consoleUtils";
 import SettingUtils from "./settingUtils";
+import ConsoleUtils from "./consoleUtils";
+import { math } from "cc";
 
-enum AudioKey {
-  BGM = "bgm",
-  BUTTON_CLICK = "button_click",
-}
+export default class AudioUtils {
+  private static _instance: AudioUtils | null = null;
+  private static _audioSource: AudioSource | null = null;
 
-class AudioUtils {
-  private constructor() {
-    this._audioSource = new AudioSource();
-  }
-  private static _singleTon: AudioUtils | null = null;
-  public static get Instance(): AudioUtils {
-    if (this._singleTon === null) {
-      this._singleTon = new AudioUtils();
-      this._singleTon.init();
+  // 静态音频资源声明
+  public static sound_button_click: AudioClip | undefined;
+  public static sound_tileDestory: AudioClip[];
+
+  public static init = () => {
+    if (this._instance === null) {
+      this._instance = new AudioUtils();
+      this._audioSource = new AudioSource();
+      // 初始化音频组件设置
+      this._audioSource.loop = false;
+      this._audioSource.volume = 1.0;
     }
-    return this._singleTon;
-  }
-
-  private _path = "audios/";
-  private _audioSource: AudioSource;
-  private _setting: SettingUtils | null = null;
-
-  public get setting(): SettingUtils {
-    if (this._setting === null) {
-      this._setting = SettingUtils.Instance;
-    }
-    return this._setting;
-  }
-
-  private init = () => {
-    // 初始化音频组件设置
-    this._audioSource.loop = false;
-    this._audioSource.volume = 1.0;
   };
 
   // 新增背景音乐控制方法 ----------------------------------
-  public playBGM = (sound: AudioKey, volume = 1.0) => {
-    if (!this.setting.value_music) return;
+  public static playBGM = (sound: string | AudioClip, volume = 1.0) => {
+    if (!SettingUtils.value_music) return;
+
     const playClip = (clip: AudioClip) => {
+      if (!this._audioSource) return;
       this._audioSource.stop();
       this._audioSource.clip = clip;
       this._audioSource.loop = true;
       this._audioSource.volume = volume;
       this._audioSource.play();
     };
-    resources.load(this._path + sound, (err, clip: AudioClip) => {
-      if (err) {
-        ConsoleUtils.error("背景音乐加载失败", err);
-        return;
-      }
-      playClip(clip);
-    });
+
+    if (sound instanceof AudioClip) {
+      playClip(sound);
+    } else {
+      resources.load(sound, (err, clip: AudioClip) => {
+        if (err) {
+          ConsoleUtils.error("背景音乐加载失败", err);
+          return;
+        }
+        playClip(clip);
+      });
+    }
   };
 
-  public stopBGM = () => {
-    this._audioSource.stop();
-    this._audioSource.clip = null; // 清空当前音频剪辑
+  public static stopBGM = () => {
+    if (this._audioSource) {
+      this._audioSource.stop();
+      this._audioSource.clip = null; // 清空当前音频剪辑
+    }
   };
 
-  public restartBGM = () => {
+  public static restartBGM = () => {
     if (this._audioSource && this._audioSource.clip) {
       this._audioSource.play();
     }
   };
 
-  public playOneShot = (sound: AudioKey, volumn = 1.0) => {
+  public static playOneShot = (sound: string | AudioClip, volumn = 1.0) => {
+    if (!SettingUtils.value_speacilSound) return;
     this.playSound(sound, volumn);
   };
 
-  private playSound = (sound: AudioKey, volumn = 1.0) => {
-    if (!this.setting.value_speacilSound) return;
-    resources.load(this._path + sound, (err, clip: AudioClip) => {
+  private static playSound = (sound: string | AudioClip, volumn = 1.0) => {
+    if (sound instanceof AudioClip) {
+      if (!this._audioSource) return;
+
+      this._audioSource.playOneShot(sound, volumn);
+      return;
+    }
+    resources.load(sound, (err, clip: AudioClip) => {
+      if (!this._audioSource) return;
       if (err) {
         ConsoleUtils.error("音频播放失败", err);
         return;
@@ -81,6 +81,13 @@ class AudioUtils {
       this._audioSource.playOneShot(clip, volumn);
     });
   };
+
+  public static playButton = () => {
+    if (!this.sound_button_click) return;
+    this.playOneShot(this.sound_button_click);
+  };
+
+  public static playTileDestory = () => {
+    this.playOneShot(this.sound_tileDestory[math.randomRangeInt(0, 2)]);
+  };
 }
-export { AudioKey };
-export default AudioUtils;

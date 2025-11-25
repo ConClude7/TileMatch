@@ -42,21 +42,21 @@ export default class LevelManager {
         break;
       case 3:
         Object.assign(levelConfig, {
-          TILE_TYPE: 6,
+          TILE_TYPE: 5,
           TOTAL_SCORE: 100,
           TOTAL_TIME: 90,
         });
         break;
       case 4:
         Object.assign(levelConfig, {
-          TILE_TYPE: 6,
+          TILE_TYPE: 5,
           TOTAL_SCORE: 120,
           TOTAL_TIME: 90,
         });
         break;
       case 5:
         Object.assign(levelConfig, {
-          TILE_TYPE: 7,
+          TILE_TYPE: 5,
           TOTAL_SCORE: 150,
           TOTAL_TIME: 90,
         });
@@ -70,7 +70,7 @@ export default class LevelManager {
         break;
       default:
         Object.assign(levelConfig, {
-          TILE_TYPE: 7,
+          TILE_TYPE: 5,
           TOTAL_SCORE: 200,
           TOTAL_TIME: 90,
         });

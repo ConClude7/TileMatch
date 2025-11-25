@@ -3,6 +3,8 @@ import SceneUtils, { GameScene } from "../utils/sceneUtils";
 import { ProgressBar } from "cc";
 import SystemUtils from "../utils/systemUtils";
 import LevelManager from "../management/levelManagement";
+import AudioUtils from "../utils/audioUtils";
+import { AudioClip } from "cc";
 const { ccclass, property } = _decorator;
 
 @ccclass("scene_home")
@@ -12,6 +14,12 @@ export class scene_home extends Component {
 
   @property(Node)
   Button_Start: Node | undefined;
+
+  @property(AudioClip)
+  Sound_ButtonClick: AudioClip | undefined;
+
+  @property([AudioClip])
+  Sound_TileDestorys: Array<AudioClip> = [];
 
   onLoad() {
     if (this.Button_Start) this.Button_Start.active = false;
@@ -28,6 +36,9 @@ export class scene_home extends Component {
 
   private async gameInit() {
     await SystemUtils.init();
+    AudioUtils.init();
+    AudioUtils.sound_button_click = this.Sound_ButtonClick;
+    AudioUtils.sound_tileDestory = this.Sound_TileDestorys;
     await LevelManager.Instance.init();
 
     if (this.Button_Start) {
@@ -36,6 +47,7 @@ export class scene_home extends Component {
   }
 
   event_click_start() {
+    AudioUtils.playButton();
     SceneUtils.load(GameScene.GAME);
   }
 }
