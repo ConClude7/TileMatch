@@ -1457,6 +1457,10 @@
       "__uuid__": "c19f6c0b-ad49-4e0f-8cc7-1b41530fd514",
       "__expectedType__": "cc.AudioClip"
     },
+    "Sound_PropsBomb": {
+      "__uuid__": "f5c8500a-9fec-49f6-b754-177cee2c1943",
+      "__expectedType__": "cc.AudioClip"
+    },
     "_id": "11MQqKHIBKIrjxycCQgTJn"
   },
   {

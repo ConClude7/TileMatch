@@ -13,6 +13,7 @@ import { tween } from "cc";
 import { easing } from "cc";
 import { Sprite } from "cc";
 import { color } from "cc";
+import AnimationUtils from "../utils/animationUtils";
 
 export interface TilePos {
   x: number;
@@ -80,6 +81,7 @@ export default class Tile {
 
   public init = () => {
     this._touch.onMove = this.onMove;
+    this._touch.onClick = this.onClick;
     this._touch.touchStart = () => {
       this._event_called = false;
     };
@@ -116,6 +118,10 @@ export default class Tile {
       EventUtils.emit(EventKey.TILE_TOUCH_MOVE, { data, success: true });
       this._event_called = true;
     }
+  };
+
+  private onClick = () => {
+    EventUtils.emit(EventKey.TILE_CLICK, { data: this, success: true });
   };
 
   private _tween_move = (end: Vec3): Promise<void> => {
@@ -215,8 +221,16 @@ export default class Tile {
   };
 
   public animation_create = (offsetY: number): Promise<void> => {
-    // ConsoleUtils.log(TAG, "执行创建动画！");
     return this._tween_create(offsetY);
+  };
+
+  public animation_bomb = (offsetY: number): Promise<void> => {
+    return new Promise((resolve) => {
+      AnimationUtils.play(this.nodeTile.NodeBomb);
+      setTimeout(() => {
+        resolve();
+      }, 850);
+    });
   };
 }
 

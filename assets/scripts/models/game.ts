@@ -92,12 +92,20 @@ export default class TileMatch {
    * @returns 洗牌后的花色数组
    */
   private createRandomTileTypes(totalTiles: number, maxType: number): number[] {
+    // 从 TileValue 枚举中获取所有可用的花色值（排除 EMPTY）
+    const availableTypes = Object.values(TileValue)
+      .filter((value) => typeof value === "number" && value !== TileValue.EMPTY)
+      .map((value) => value as number);
+
+    // 随机选择 maxType 种花色
+    const selectedTypes = this.selectRandomTypes(availableTypes, maxType);
     const tiles: number[] = [];
 
     // 确保每种花色出现次数大致相等
-    for (let type = 0; type < maxType; type++) {
-      const countPerType = Math.floor(totalTiles / maxType);
-      for (let i = 0; i < countPerType; i++) {
+    for (let i = 0; i < selectedTypes.length; i++) {
+      const type = selectedTypes[i];
+      const countPerType = Math.floor(totalTiles / selectedTypes.length);
+      for (let j = 0; j < countPerType; j++) {
         tiles.push(type);
       }
     }
@@ -110,6 +118,22 @@ export default class TileMatch {
 
     // 使用 Fisher-Yates 洗牌算法随机打乱顺序
     return this.shuffleArray(tiles);
+  }
+
+  /**
+   * 从可用花色中随机选择指定数量的花色
+   */
+  private selectRandomTypes(availableTypes: number[], count: number): number[] {
+    const shuffled = [...availableTypes];
+
+    // Fisher-Yates 洗牌算法
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // 返回前 count 个花色
+    return shuffled.slice(0, count);
   }
 
   /**
@@ -338,6 +362,128 @@ export default class TileMatch {
         }, GameData.TWEEN_TILE_CREATE_S * 2000);
       });
     };
+  }
+
+  /**
+   * 消除指定花色的所有块
+   * @param tileValue 要消除的花色值
+   * @returns 是否成功消除了方块
+   */
+  public clearAllTilesByType(tileValue: TileValue): boolean {
+    const { width, height } = this.options.size;
+    const tilesToClear: Tile[] = [];
+
+    // 1. 收集所有指定花色的方块
+    for (let x = 0; x < width; x++) {
+      for (let y = 0; y < height; y++) {
+        const tile = this.map[x][y];
+        if (tile.value === tileValue) {
+          tilesToClear.push(tile);
+        }
+      }
+    }
+
+    // 2. 如果没有找到指定花色的方块，返回false
+    if (tilesToClear.length === 0) {
+      console.log(`未找到花色 ${TileValue[tileValue]} 的方块`);
+      return false;
+    }
+
+    console.log(
+      `消除花色 ${TileValue[tileValue]} 的所有方块，共 ${tilesToClear.length} 个`
+    );
+
+    // 3. 执行消除逻辑
+    this.clearTilesByType(tilesToClear, tileValue);
+    return true;
+  }
+
+  /**
+   * 执行指定花色的消除逻辑
+   */
+  private clearTilesByType(tiles: Tile[], tileValue: TileValue): void {
+    // 统计金币数量
+    let goldenCount = 0;
+    let normalCount = 0;
+
+    // 按列统计消除数量（用于下落计算）
+    const columnOffsets: Map<number, number> = new Map();
+
+    // 标记要消除的方块
+    for (const tile of tiles) {
+      if (tile.value === TileValue.BTC) {
+        goldenCount++;
+      } else {
+        normalCount++;
+      }
+
+      // 记录这一列有一个方块被消除
+      const col = tile.pos.x;
+      columnOffsets.set(col, (columnOffsets.get(col) || 0) + 1);
+
+      // 标记为空白
+      tile.value = TileValue.EMPTY;
+    }
+
+    // 触发消除效果
+    this.onTilesClearedByType(tiles, tileValue, goldenCount, normalCount);
+
+    // 设置回调，在动画完成后执行下落和填充
+    this.callback_matchSuccess = () => {
+      return new Promise((resolve) => {
+        // 方块下落
+        this.applyGravityByColumn(columnOffsets);
+
+        // 填充新的方块
+        this.fillEmptyTilesByColumn(columnOffsets);
+
+        // 检查连锁反应
+        setTimeout(() => {
+          const hasMoreMatches = this.checkAndClearMatches();
+          if (!hasMoreMatches && !this.checkMapHasResult()) {
+            console.log("没有可消除的组合了，重新整理地图");
+            this.refershMap();
+          }
+          this.checkGameEnd();
+          resolve(hasMoreMatches);
+        }, GameData.TWEEN_TILE_CREATE_S * 2000);
+      });
+    };
+  }
+
+  /**
+   * 花色消除事件回调
+   */
+  private onTilesClearedByType(
+    tiles: Tile[],
+    tileValue: TileValue,
+    goldenCount: number,
+    normalCount: number
+  ): void {
+    // 先播放所有方块的bomb动画
+    Promise.all(
+      tiles.map((tile) => tile.animation_bomb(0)) // offsetY传入0，因为bomb动画不需要下落偏移
+    )
+      .then(() => {
+        // bomb动画完成后播放create动画
+        return Promise.all(
+          tiles.map((tile) => tile.animation_create(0)) // 同样传入0，因为这里只是重新创建动画
+        );
+      })
+      .then(() => {
+        // 所有动画完成后执行回调
+        if (this.callback_matchSuccess) {
+          this.callback_matchSuccess();
+        }
+      });
+
+    // 发送事件通知
+    const data = { tiles, tileValue, goldenCount, normalCount };
+    EventUtils.emit(EventKey.TILE_CLEAR_TYPE, { data, success: true });
+
+    console.log(
+      `消除花色 ${TileValue[tileValue]} 完成，金币: ${goldenCount}, 普通: ${normalCount}`
+    );
   }
 
   /**

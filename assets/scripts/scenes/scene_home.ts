@@ -36,6 +36,9 @@ export class scene_home extends Component {
   @property(AudioClip)
   Soune_Fail: AudioClip | undefined;
 
+  @property(AudioClip)
+  Sound_PropsBomb: AudioClip | undefined;
+
   onLoad() {
     if (this.Button_Start) this.Button_Start.active = false;
     SceneUtils.preload(GameScene.GAME, (percent) => {
@@ -59,6 +62,7 @@ export class scene_home extends Component {
     AudioUtils.sound_tileDestory = this.Sound_TileDestorys;
     AudioUtils.sound_win = this.Sound_Win;
     AudioUtils.sound_fail = this.Soune_Fail;
+    AudioUtils.sound_propsBomb = this.Sound_PropsBomb;
     await LevelManager.Instance.init();
     if (this.Button_Start) {
       this.Button_Start.active = true;

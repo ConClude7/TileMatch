@@ -3,6 +3,7 @@ import EventUtils, { EventData, EventKey } from "../utils/eventUtils";
 import GameManagement from "../management/gameManagement";
 import RouterUtils, { RouterPage } from "../utils/routerUtils";
 import LevelManager from "../management/levelManagement";
+import AudioUtils from "../utils/audioUtils";
 const { ccclass, property } = _decorator;
 
 @ccclass("page_game")
@@ -21,6 +22,12 @@ export class page_game extends Component {
 
   @property(Node)
   Lavel_Level_Bottom: Node | undefined;
+
+  @property(Node)
+  Label_Bomb: Node | undefined;
+
+  @property(Node)
+  Border_Bomb: Node | undefined;
 
   public get NodeGrid(): Node {
     if (!this.Node_Grid) throw "Node_Grid is NULL!";
@@ -57,5 +64,11 @@ export class page_game extends Component {
       this._manager?.destory();
       this._manager = null;
     }
+  }
+
+  event_click_bomb() {
+    if (!this._manager) return;
+    this._manager.bombMode = !this._manager.bombMode;
+    AudioUtils.playButton();
   }
 }

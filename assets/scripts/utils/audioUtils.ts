@@ -18,6 +18,8 @@ export default class AudioUtils {
   public static sound_win: AudioClip | undefined;
   public static sound_fail: AudioClip | undefined;
 
+  public static sound_propsBomb: AudioClip | undefined;
+
   public static init = () => {
     if (this._instance === null) {
       this._instance = new AudioUtils();
@@ -92,6 +94,11 @@ export default class AudioUtils {
   public static playButton = () => {
     if (!this.sound_button_click) return;
     this.playOneShot(this.sound_button_click);
+  };
+
+  public static playPropsBomb = () => {
+    if (!this.sound_propsBomb) return;
+    this.playOneShot(this.sound_propsBomb);
   };
 
   public static playTileDestory = (num: number) => {

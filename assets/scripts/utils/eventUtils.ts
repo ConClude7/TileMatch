@@ -14,9 +14,11 @@ enum EventKey {
   CHANGE_NETWORK = "CHANGE_NETWORK",
   CALL_ELEVATOR = "CALL_ELEVATOR",
   MAP_CREATE = "MAP_CREATE",
+  TILE_CLICK = "TILE_CLICK",
   TILE_TOUCH_MOVE = "TILE_TOUCH_MOVE",
   TILE_MATCH = "TILE_MATCH",
   TILE_AUTO_CLEAR = "TILE_AUTO_CLEAR",
+  TILE_CLEAR_TYPE = "TILE_CLEAR_TYPE",
 }
 class EventUtils {
   private static eventTarget = new EventTarget();

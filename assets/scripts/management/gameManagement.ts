@@ -40,6 +40,33 @@ export default class GameManagement {
   private _totalScore = 1000;
   private _totalTime = 90;
   private _autoTotal = 0;
+
+  private _bombCount = 1;
+
+  public get bombCount(): number {
+    return this._bombCount;
+  }
+
+  public set bombCount(v: number) {
+    this._bombCount = v;
+    this._node.Label_Bomb?.changeLabelString(`${v}`);
+  }
+
+  private _bombMode = false;
+
+  public set bombMode(v: boolean) {
+    if (this.bombCount > 0) {
+      this._bombMode = v;
+    }
+
+    if (this._node.Border_Bomb) {
+      this._node.Border_Bomb.active = this._bombMode;
+    }
+  }
+  public get bombMode(): boolean {
+    return this._bombMode;
+  }
+
   public set score(v: number) {
     this._score = v;
     this._node.Node_Score?.changeLabelString(
@@ -89,6 +116,7 @@ export default class GameManagement {
     if (this._isInitialized) {
       this.destory(); // 清理之前的实例
     }
+    EventUtils.on(EventKey.TILE_CLICK, this.event_tile_click, this);
     EventUtils.on(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.on(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
     EventUtils.on(EventKey.TILE_MATCH, this.event_tile_match, this);
@@ -105,6 +133,7 @@ export default class GameManagement {
 
   public destory() {
     ConsoleUtils.warn(TAG, "destory!");
+    EventUtils.off(EventKey.TILE_CLICK, this.event_tile_click, this);
     EventUtils.off(EventKey.MAP_CREATE, this.event_map_create, this);
     EventUtils.off(EventKey.TILE_TOUCH_MOVE, this.event_tile_touch_move, this);
     EventUtils.off(EventKey.TILE_MATCH, this.event_tile_match, this);
@@ -315,5 +344,18 @@ export default class GameManagement {
       isWin ? PrefabType.GAME_SUCCESS : PrefabType.GAME_FAIL
     );
     ModalUtils.show(prefab);
+  };
+
+  private event_tile_click = (e: EventData<Tile>) => {
+    if (!this.bombMode) {
+      return;
+    }
+    this._autoTotal = 0;
+    this.bombMode = false;
+    this.bombCount -= 1;
+    const tile = e.data;
+    AudioUtils.playPropsBomb();
+    this.game.clearAllTilesByType(tile.value);
+    this.bombMode = false;
   };
 }
