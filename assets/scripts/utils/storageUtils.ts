@@ -7,6 +7,7 @@ enum StorageKey {
   SETTING_MUSIC = "setting_music",
   SETTING_SHAKE = "setting_shake",
   LEVEL_DATA = "LEVEL_DATA",
+  LEVEL_PAGE_INDEX = "LEVEL_PAGE_INDEX",
 }
 
 class StorageUtils {

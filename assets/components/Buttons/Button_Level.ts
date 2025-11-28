@@ -30,9 +30,13 @@ export class Button_Level extends Component {
     if (this.Node_Off) this.Node_Off.active = false;
     if (this.Node_On) this.Node_On.active = true;
   }
+  show_off() {
+    if (this.Node_Off) this.Node_Off.active = true;
+    if (this.Node_On) this.Node_On.active = false;
+  }
 
-  initView(data: LevelData) {
+  initView(data: LevelData, trueIndex: number) {
     const { level } = data;
-    this.level = level;
+    this.level = trueIndex;
   }
 }

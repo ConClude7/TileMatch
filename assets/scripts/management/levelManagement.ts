@@ -1,3 +1,4 @@
+import { page_level } from "../pages/page_level";
 import ConsoleUtils from "../utils/consoleUtils";
 import StorageUtils, { StorageKey } from "../utils/storageUtils";
 
@@ -13,6 +14,8 @@ export default class LevelManager {
     return this._singleton;
   }
 
+  public pageLevel: page_level | undefined = undefined;
+
   private maxLevel = 9;
   private storageKey = StorageKey.LEVEL_DATA;
 
@@ -26,52 +29,10 @@ export default class LevelManager {
     };
 
     switch (this.currentGameLevel) {
-      case 1:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
-      case 2:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
-      case 3:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
-      case 4:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
-      case 5:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
-      case 6:
-        Object.assign(levelConfig, {
-          TILE_TYPE: 4,
-          TOTAL_SCORE: 400,
-          TOTAL_TIME: 300,
-        });
-        break;
       default:
         Object.assign(levelConfig, {
-          TILE_TYPE: 5,
-          TOTAL_SCORE: 400,
+          TILE_TYPE: 4,
+          TOTAL_SCORE: 20,
           TOTAL_TIME: 300,
         });
         break;
@@ -84,7 +45,7 @@ export default class LevelManager {
       const dataList: Array<LevelData> = [];
       let level = 1;
       const next = () => {
-        if (level >= this.maxLevel) {
+        if (level > this.maxLevel) {
           resolve(dataList);
           return;
         }
@@ -98,6 +59,12 @@ export default class LevelManager {
       };
       next();
     });
+  }
+
+  public async resetData() {
+    const empty = await this.createEmptyData();
+    this._data = empty;
+    StorageUtils.set(StorageKey.LEVEL_DATA, empty);
   }
 
   private _data: Array<LevelData> = [];
@@ -114,7 +81,16 @@ export default class LevelManager {
   };
 
   public getData(): Array<LevelData> {
-    return this._data;
+    const dataList = this._data;
+    if (dataList.length !== 9) {
+      dataList.push({
+        level: 9,
+        stars: 0,
+        played: false,
+      });
+    }
+    StorageUtils.set(StorageKey.LEVEL_DATA, dataList);
+    return dataList;
   }
 
   public updateLevelData(levelData: LevelData) {
@@ -133,6 +109,12 @@ export default class LevelManager {
       played: true,
     };
     this.updateLevelData(levelData);
+    const pageLevels = this.pageLevel?.Parent_Levels?.children.length || 9;
+    if (this.currentGameLevel % pageLevels === 0) {
+      const nextPage = (StorageUtils.get(StorageKey.LEVEL_PAGE_INDEX) || 0) + 1;
+      StorageUtils.set(StorageKey.LEVEL_PAGE_INDEX, nextPage);
+      if (this.pageLevel) this.pageLevel.nextGo = true;
+    }
   }
 }
 

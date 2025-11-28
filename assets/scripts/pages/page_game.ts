@@ -4,6 +4,7 @@ import GameManagement from "../management/gameManagement";
 import RouterUtils, { RouterPage } from "../utils/routerUtils";
 import LevelManager from "../management/levelManagement";
 import AudioUtils from "../utils/audioUtils";
+import StorageUtils, { StorageKey } from "../utils/storageUtils";
 const { ccclass, property } = _decorator;
 
 @ccclass("page_game")
@@ -40,12 +41,11 @@ export class page_game extends Component {
   onEnable() {
     EventUtils.on(EventKey.ROUTER_BACK, this.event_router_back, this);
     this._manager = new GameManagement(this);
-    this.Label_Level?.changeLabelString(
-      `${this._levelManager.currentGameLevel}关`
-    );
-    this.Lavel_Level_Bottom?.changeLabelString(
-      `${this._levelManager.currentGameLevel}`
-    );
+    const trueIndex =
+      (StorageUtils.get(StorageKey.LEVEL_PAGE_INDEX) ?? 0) * 9 +
+      this._levelManager.currentGameLevel;
+    this.Label_Level?.changeLabelString(`${trueIndex}关`);
+    this.Lavel_Level_Bottom?.changeLabelString(`${trueIndex}`);
     this.NodeGrid.destroyAllChildren();
     this.scheduleOnce(() => {
       if (this._manager) {
@@ -70,5 +70,9 @@ export class page_game extends Component {
     if (!this._manager) return;
     this._manager.bombMode = !this._manager.bombMode;
     AudioUtils.playButton();
+  }
+
+  event_click_back() {
+    RouterUtils.back();
   }
 }
